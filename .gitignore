@@ -1,0 +1,12 @@
+/.metadata/
+
+# IDE-specific folders
+/.idea/
+/.vscode/
+/.metadata/
+/.sonarlint/
+/.cursor/
+
+# Logs
+*.log
+/logs/
