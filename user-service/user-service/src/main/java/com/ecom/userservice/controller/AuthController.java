@@ -2,6 +2,8 @@ package com.ecom.userservice.controller;
 
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,6 +26,8 @@ import jakarta.validation.constraints.NotBlank;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+
+	private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
 	private final AuthenticationManager authenticationManager;
 	private final JwtService jwtService;
@@ -48,37 +52,80 @@ public class AuthController {
 
 	@PostMapping("/login")
 	public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest request) {
-		Authentication auth = authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(request.username(), request.password()));
-		String token = jwtService.generateToken((org.springframework.security.core.userdetails.User) auth.getPrincipal());
-		return ResponseEntity.ok(new TokenResponse(token));
+		logger.info("Login attempt initiated for username: {}", request.username());
+		
+		try {
+			logger.debug("Authenticating user: {}", request.username());
+			Authentication auth = authenticationManager.authenticate(
+					new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+			
+			logger.debug("Authentication successful for user: {}", request.username());
+			String token = jwtService.generateToken((org.springframework.security.core.userdetails.User) auth.getPrincipal());
+			
+			logger.info("Login successful for user: {}. Token generated successfully", request.username());
+			return ResponseEntity.ok(new TokenResponse(token));
+		} catch (Exception e) {
+			logger.error("Login failed for user: {}. Error: {}", request.username(), e.getMessage());
+			throw e;
+		}
 	}
 
 	@PostMapping("/validate")
 	public ResponseEntity<ValidateResponse> validate(@RequestBody TokenResponse token) {
-		var username = jwtService.extractUsername(token.token());
-		var roles = jwtService.extractRoles(token.token());
-		var exp = jwtService.extractExpiration(token.token());
-		return ResponseEntity.ok(new ValidateResponse(username, roles, exp.toInstant().getEpochSecond()));
+		logger.debug("Token validation request received");
+		
+		try {
+			var username = jwtService.extractUsername(token.token());
+			logger.debug("Extracted username from token: {}", username);
+			
+			var roles = jwtService.extractRoles(token.token());
+			logger.debug("Extracted roles from token: {}", roles);
+			
+			var exp = jwtService.extractExpiration(token.token());
+			logger.debug("Token expiration: {}", exp);
+			
+			logger.info("Token validation successful for user: {}", username);
+			return ResponseEntity.ok(new ValidateResponse(username, roles, exp.toInstant().getEpochSecond()));
+		} catch (Exception e) {
+			logger.error("Token validation failed. Error: {}", e.getMessage());
+			throw e;
+		}
 	}
 
 	@PostMapping("/register")
 	public ResponseEntity<ApiMessage> register(@RequestBody RegisterRequest request) {
-		if (userRepo.existsByUsername(request.username())) {
-			return ResponseEntity.badRequest().body(new ApiMessage("username already exists"));
+		logger.info("User registration attempt initiated for username: {}, role: {}", request.username(), request.role());
+		
+		try {
+			if (userRepo.existsByUsername(request.username())) {
+				logger.warn("Registration failed - username already exists: {}", request.username());
+				return ResponseEntity.badRequest().body(new ApiMessage("username already exists"));
+			}
+			
+			logger.debug("Creating new user account for: {}", request.username());
+			UserAccount user = new UserAccount();
+			user.setUsername(request.username());
+			user.setPasswordHash(passwordEncoder.encode(request.password()));
+			
+			RoleName roleName = request.role() == null ? RoleName.USER : request.role();
+			logger.debug("Setting role for user {}: {}", request.username(), roleName);
+			
+			Role role = roleRepo.findByName(roleName).orElseGet(() -> {
+				logger.debug("Creating new role: {}", roleName);
+				Role r = new Role();
+				r.setName(roleName);
+				return roleRepo.save(r);
+			});
+			
+			user.setRoles(Set.of(role));
+			userRepo.save(user);
+			
+			logger.info("User registration successful for username: {} with role: {}", request.username(), roleName);
+			return ResponseEntity.ok(new ApiMessage("registered"));
+		} catch (Exception e) {
+			logger.error("User registration failed for username: {}. Error: {}", request.username(), e.getMessage());
+			throw e;
 		}
-		UserAccount user = new UserAccount();
-		user.setUsername(request.username());
-		user.setPasswordHash(passwordEncoder.encode(request.password()));
-		RoleName roleName = request.role() == null ? RoleName.USER : request.role();
-		Role role = roleRepo.findByName(roleName).orElseGet(() -> {
-			Role r = new Role();
-			r.setName(roleName);
-			return roleRepo.save(r);
-		});
-		user.setRoles(Set.of(role));
-		userRepo.save(user);
-		return ResponseEntity.ok(new ApiMessage("registered"));
 	}
 }
 
