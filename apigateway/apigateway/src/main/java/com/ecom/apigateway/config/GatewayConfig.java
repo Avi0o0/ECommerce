@@ -23,96 +23,46 @@ public class GatewayConfig {
                         .uri("lb://USER-SERVICE")
                 )
                 
-                // User Management - Protected with role-based access
+                // User Service
                 .route("user-service", r -> r
-                        .path("/api/users/**")
-                        .filters(f -> f.stripPrefix(2)) // Remove /api prefix
-                        .uri("lb://USER-SERVICE")
-                )
-                
-                // User Management - Legacy route (without /api prefix)
-                .route("user-service-legacy", r -> r
                         .path("/users/**")
-                        .filters(f -> f.stripPrefix(0)) // Keep the /users prefix
                         .uri("lb://USER-SERVICE")
                 )
                 
-                // Product Service - Protected with role-based access
+                // Product Service
                 .route("product-service", r -> r
-                        .path("/api/products/**")
-                        .filters(f -> f.stripPrefix(2)) // Remove /api prefix
+                        .path("/products/**")
                         .uri("lb://PRODUCT-SERVICE")
                 )
                 
-                // Order Service - Protected with role-based access
+                // Order Service
                 .route("order-service", r -> r
-                        .path("/api/orders/**")
-                        .filters(f -> f.stripPrefix(2)) // Remove /api prefix
+                        .path("/orders/**")
                         .uri("lb://ORDER-SERVICE")
                 )
                 
-                // Payment Service - Protected with role-based access
+                // Payment Service
                 .route("payment-service", r -> r
-                        .path("/api/payments/**")
-                        .filters(f -> f.stripPrefix(2)) // Remove /api prefix
+                        .path("/payments/**")
                         .uri("lb://PAYMENT-SERVICE")
                 )
                 
-                // Cart Service - Protected with role-based access
+                // Cart Service
                 .route("cart-service", r -> r
-                        .path("/api/cart/**")
-                        .filters(f -> f.stripPrefix(2)) // Remove /api prefix
+                        .path("/cart/**")
                         .uri("lb://CART-SERVICE")
                 )
                 
-                // Inventory Service - Protected with role-based access
+                // Inventory Service
                 .route("inventory-service", r -> r
                         .path("/api/inventory/**")
-                        .filters(f -> f.stripPrefix(2)) // Remove /api prefix
+                        .filters(f -> f.stripPrefix(2))
                         .uri("lb://INVENTORY-SERVICE")
                 )
                 
-                // Notification Service - Protected with role-based access
+                // Notification Service
                 .route("notification-service", r -> r
-                        .path("/api/notifications/**")
-                        .filters(f -> f.stripPrefix(2)) // Remove /api prefix
-                        .uri("lb://NOTIFICATION-SERVICE")
-                )
-                
-                // Legacy routes for backward compatibility (without /api prefix)
-                .route("product-service-legacy", r -> r
-                        .path("/products/**")
-                        .filters(f -> f.stripPrefix(1)) // Remove /products prefix
-                        .uri("lb://PRODUCT-SERVICE")
-                )
-                
-                .route("order-service-legacy", r -> r
-                        .path("/orders/**")
-                        .filters(f -> f.stripPrefix(1)) // Remove /orders prefix
-                        .uri("lb://ORDER-SERVICE")
-                )
-                
-                .route("payment-service-legacy", r -> r
-                        .path("/payments/**")
-                        .filters(f -> f.stripPrefix(1)) // Remove /payments prefix
-                        .uri("lb://PAYMENT-SERVICE")
-                )
-                
-                .route("cart-service-legacy", r -> r
-                        .path("/cart/**")
-                        .filters(f -> f.stripPrefix(1)) // Remove /cart prefix
-                        .uri("lb://CART-SERVICE")
-                )
-                
-                .route("inventory-service-legacy", r -> r
-                        .path("/inventory/**")
-                        .filters(f -> f.stripPrefix(1)) // Remove /inventory prefix
-                        .uri("lb://INVENTORY-SERVICE")
-                )
-                
-                .route("notification-service-legacy", r -> r
                         .path("/notifications/**")
-                        .filters(f -> f.stripPrefix(1)) // Remove /notifications prefix
                         .uri("lb://NOTIFICATION-SERVICE")
                 )
                 

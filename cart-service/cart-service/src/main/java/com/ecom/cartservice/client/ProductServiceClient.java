@@ -8,7 +8,7 @@ import com.ecom.cartservice.dto.ProductDto;
 
 @FeignClient(name = "PRODUCT-SERVICE")
 public interface ProductServiceClient {
-
+    
     @GetMapping("/products/{id}")
     ProductDto.ProductResponse getProductById(@PathVariable Long id);
 }

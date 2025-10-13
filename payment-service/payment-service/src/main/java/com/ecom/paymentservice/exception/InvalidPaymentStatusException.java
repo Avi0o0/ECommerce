@@ -8,11 +8,11 @@ public class InvalidPaymentStatusException extends RuntimeException {
         super(message);
     }
     
-    public InvalidPaymentStatusException(String message, Throwable cause) {
-        super(message, cause);
+    public InvalidPaymentStatusException(String currentStatus, String newStatus) {
+        super("Invalid status transition from " + currentStatus + " to " + newStatus);
     }
     
-    public InvalidPaymentStatusException(String currentStatus, String requestedStatus) {
-        super(String.format("Invalid status transition from %s to %s", currentStatus, requestedStatus));
+    public InvalidPaymentStatusException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

@@ -33,36 +33,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
     
-    @ExceptionHandler(InvalidNotificationTypeException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidNotificationTypeException(InvalidNotificationTypeException ex, WebRequest request) {
-        logger.error("Invalid notification type: {}", ex.getMessage());
-        
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.BAD_REQUEST.value(),
-            "Invalid Notification Type",
-            ex.getMessage(),
-            LocalDateTime.now(),
-            request.getDescription(false)
-        );
-        
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-    
-    @ExceptionHandler(InvalidNotificationStatusException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidNotificationStatusException(InvalidNotificationStatusException ex, WebRequest request) {
-        logger.error("Invalid notification status: {}", ex.getMessage());
-        
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.BAD_REQUEST.value(),
-            "Invalid Notification Status",
-            ex.getMessage(),
-            LocalDateTime.now(),
-            request.getDescription(false)
-        );
-        
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-    
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ValidationErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
         logger.error("Validation error: {}", ex.getMessage());
@@ -87,17 +57,15 @@ public class GlobalExceptionHandler {
     
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
-        logger.error("Illegal argument: {}", ex.getMessage());
-        
+        logger.error("Invalid argument provided: {}", ex.getMessage());
         ErrorResponse errorResponse = new ErrorResponse(
             HttpStatus.BAD_REQUEST.value(),
-            "Invalid Request",
+            "Invalid Argument",
             ex.getMessage(),
             LocalDateTime.now(),
             request.getDescription(false)
         );
-        
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.badRequest().body(errorResponse);
     }
     
     @ExceptionHandler(Exception.class)
@@ -113,80 +81,5 @@ public class GlobalExceptionHandler {
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-    
-    // Error Response Classes
-    public static class ErrorResponse {
-        private int status;
-        private String error;
-        private String message;
-        private LocalDateTime timestamp;
-        private String path;
-        
-        public ErrorResponse(int status, String error, String message, LocalDateTime timestamp, String path) {
-            this.status = status;
-            this.error = error;
-            this.message = message;
-            this.timestamp = timestamp;
-            this.path = path;
-        }
-        
-        // Getters and Setters
-        public int getStatus() {
-            return status;
-        }
-        
-        public void setStatus(int status) {
-            this.status = status;
-        }
-        
-        public String getError() {
-            return error;
-        }
-        
-        public void setError(String error) {
-            this.error = error;
-        }
-        
-        public String getMessage() {
-            return message;
-        }
-        
-        public void setMessage(String message) {
-            this.message = message;
-        }
-        
-        public LocalDateTime getTimestamp() {
-            return timestamp;
-        }
-        
-        public void setTimestamp(LocalDateTime timestamp) {
-            this.timestamp = timestamp;
-        }
-        
-        public String getPath() {
-            return path;
-        }
-        
-        public void setPath(String path) {
-            this.path = path;
-        }
-    }
-    
-    public static class ValidationErrorResponse extends ErrorResponse {
-        private Map<String, String> validationErrors;
-        
-        public ValidationErrorResponse(int status, String error, String message, LocalDateTime timestamp, Map<String, String> validationErrors) {
-            super(status, error, message, timestamp, "");
-            this.validationErrors = validationErrors;
-        }
-        
-        public Map<String, String> getValidationErrors() {
-            return validationErrors;
-        }
-        
-        public void setValidationErrors(Map<String, String> validationErrors) {
-            this.validationErrors = validationErrors;
-        }
     }
 }

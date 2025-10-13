@@ -63,6 +63,13 @@ public class CartItem {
         this.priceAtAddition = priceAtAddition;
     }
 
+    public CartItem(Cart cart, Long productId, Integer quantity) {
+        this.cart = cart;
+        this.productId = productId;
+        this.quantity = quantity;
+        this.priceAtAddition = BigDecimal.ZERO; // Default price
+    }
+
     // Getters and Setters
     public Long getId() {
         return id;

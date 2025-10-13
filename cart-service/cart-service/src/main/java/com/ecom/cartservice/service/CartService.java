@@ -1,22 +1,20 @@
 package com.ecom.cartservice.service;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ecom.cartservice.client.ProductServiceClient;
-import com.ecom.cartservice.dto.CartDto;
-import com.ecom.cartservice.dto.ProductDto;
+import com.ecom.cartservice.dto.AddToCartRequest;
+import com.ecom.cartservice.dto.CartResponse;
 import com.ecom.cartservice.entity.Cart;
 import com.ecom.cartservice.entity.CartItem;
 import com.ecom.cartservice.exception.CartItemNotFoundException;
 import com.ecom.cartservice.exception.CartNotFoundException;
-import com.ecom.cartservice.exception.ProductNotFoundException;
 import com.ecom.cartservice.repository.CartItemRepository;
 import com.ecom.cartservice.repository.CartRepository;
 
@@ -25,137 +23,76 @@ import com.ecom.cartservice.repository.CartRepository;
 public class CartService {
 
     private static final Logger logger = LoggerFactory.getLogger(CartService.class);
+    private static final String CART_NOT_FOUND_MESSAGE = "Cart not found for user: ";
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
-    private final ProductServiceClient productServiceClient;
 
-    public CartService(CartRepository cartRepository, 
-                      CartItemRepository cartItemRepository,
-                      ProductServiceClient productServiceClient) {
+    public CartService(CartRepository cartRepository, CartItemRepository cartItemRepository) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
-        this.productServiceClient = productServiceClient;
-    }
-
-    /**
-     * Get or create cart for user
-     */
-    @Transactional(readOnly = true)
-    public Cart getOrCreateCart(Long userId) {
-        logger.info("Getting or creating cart for user: {}", userId);
-        
-        Optional<Cart> existingCart = cartRepository.findByUserId(userId);
-        if (existingCart.isPresent()) {
-            logger.debug("Found existing cart for user: {}", userId);
-            return existingCart.get();
-        }
-
-        logger.info("Creating new cart for user: {}", userId);
-        Cart newCart = new Cart(userId);
-        return cartRepository.save(newCart);
     }
 
     /**
      * Get cart for user
      */
     @Transactional(readOnly = true)
-    public CartDto.CartResponse getCart(Long userId) {
+    public CartResponse getCart(Long userId) {
         logger.info("Getting cart for user: {}", userId);
-        
         Cart cart = cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new CartNotFoundException("Cart not found for user: " + userId));
-
-        List<CartDto.CartItemResponse> cartItemResponses = cart.getCartItems().stream()
-                .map(this::convertToCartItemResponse)
-                .toList();
-
-        BigDecimal totalPrice = cart.getCartItems().stream()
-                .map(CartItem::getTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        return new CartDto.CartResponse(
-                cart.getId(),
-                cart.getUserId(),
-                cartItemResponses,
-                cart.getTotalItems(),
-                totalPrice,
-                cart.getCreatedAt(),
-                cart.getUpdatedAt()
-        );
+                .orElseThrow(() -> new CartNotFoundException(CART_NOT_FOUND_MESSAGE + userId));
+        return convertToResponse(cart);
     }
 
     /**
      * Add product to cart
      */
-    public CartDto.CartResponse addToCart(Long userId, CartDto.AddToCartRequest request) {
+    public CartResponse addToCart(Long userId, AddToCartRequest request) {
         logger.info("Adding product {} to cart for user: {}", request.getProductId(), userId);
 
-        // Validate product exists and get current price
-        ProductDto.ProductResponse product = productServiceClient.getProductById(request.getProductId());
-        if (product == null || !product.getIsActive()) {
-            throw new ProductNotFoundException("Product not found or inactive: " + request.getProductId());
-        }
+        Cart cart = cartRepository.findByUserId(userId).orElseGet(() -> {
+            logger.info("Creating new cart for user: {}", userId);
+            return cartRepository.save(new Cart(userId));
+        });
 
-        // Get or create cart
-        Cart cart = getOrCreateCart(userId);
+        Optional<CartItem> existingItem = cart.getCartItems().stream()
+                .filter(item -> item.getProductId().equals(request.getProductId()))
+                .findFirst();
 
-        // Check if product already exists in cart
-        Optional<CartItem> existingItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), request.getProductId());
-        
         if (existingItem.isPresent()) {
-            // Update quantity
-            CartItem cartItem = existingItem.get();
-            cartItem.setQuantity(cartItem.getQuantity() + request.getQuantity());
-            cartItemRepository.save(cartItem);
-            logger.info("Updated quantity for product {} in cart. New quantity: {}", request.getProductId(), cartItem.getQuantity());
+            CartItem item = existingItem.get();
+            item.setQuantity(item.getQuantity() + request.getQuantity());
+            cartItemRepository.save(item);
+            logger.info("Updated quantity for product {} in cart {} to {}", request.getProductId(), cart.getId(), item.getQuantity());
         } else {
-            // Add new item
-            CartItem newItem = new CartItem(cart, request.getProductId(), request.getQuantity(), product.getPrice());
+            CartItem newItem = new CartItem(cart, request.getProductId(), request.getQuantity());
             cart.addCartItem(newItem);
             cartItemRepository.save(newItem);
-            logger.info("Added new product {} to cart with quantity: {}", request.getProductId(), request.getQuantity());
+            logger.info("Added new product {} to cart {}", request.getProductId(), cart.getId());
         }
 
-        return getCart(userId);
-    }
-
-    /**
-     * Update product quantity in cart
-     */
-    public CartDto.CartResponse updateQuantity(Long userId, CartDto.UpdateQuantityRequest request) {
-        logger.info("Updating quantity for product {} in cart for user: {}", request.getProductId(), userId);
-
-        Cart cart = cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new CartNotFoundException("Cart not found for user: " + userId));
-
-        CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), request.getProductId())
-                .orElseThrow(() -> new CartItemNotFoundException("Product not found in cart: " + request.getProductId()));
-
-        cartItem.setQuantity(request.getQuantity());
-        cartItemRepository.save(cartItem);
-        
-        logger.info("Updated quantity for product {} to: {}", request.getProductId(), request.getQuantity());
-        return getCart(userId);
+        return convertToResponse(cart);
     }
 
     /**
      * Remove product from cart
      */
-    public CartDto.CartResponse removeFromCart(Long userId, Long productId) {
+    public CartResponse removeFromCart(Long userId, Long productId) {
         logger.info("Removing product {} from cart for user: {}", productId, userId);
 
         Cart cart = cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new CartNotFoundException("Cart not found for user: " + userId));
+                .orElseThrow(() -> new CartNotFoundException(CART_NOT_FOUND_MESSAGE + userId));
 
-        CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), productId)
-                .orElseThrow(() -> new CartItemNotFoundException("Product not found in cart: " + productId));
+        CartItem itemToRemove = cart.getCartItems().stream()
+                .filter(item -> item.getProductId().equals(productId))
+                .findFirst()
+                .orElseThrow(() -> new CartItemNotFoundException("Product " + productId + " not found in cart for user: " + userId));
 
-        cart.removeCartItem(cartItem);
-        cartItemRepository.delete(cartItem);
-        
-        logger.info("Removed product {} from cart", productId);
-        return getCart(userId);
+        cart.removeCartItem(itemToRemove);
+        cartItemRepository.delete(itemToRemove);
+        logger.info("Removed product {} from cart {}", productId, cart.getId());
+
+        return convertToResponse(cart);
     }
 
     /**
@@ -163,69 +100,33 @@ public class CartService {
      */
     public void clearCart(Long userId) {
         logger.info("Clearing cart for user: {}", userId);
-
         Cart cart = cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new CartNotFoundException("Cart not found for user: " + userId));
+                .orElseThrow(() -> new CartNotFoundException(CART_NOT_FOUND_MESSAGE + userId));
 
-        cart.clearCart();
-        cartItemRepository.deleteByCartId(cart.getId());
-        
-        logger.info("Cleared cart for user: {}", userId);
+        cartItemRepository.deleteAll(cart.getCartItems());
+        cart.getCartItems().clear();
+        cartRepository.save(cart);
+        logger.info("Cart cleared for user: {}", userId);
     }
 
     /**
-     * Get cart items count for user
+     * Convert Cart entity to CartResponse DTO
      */
-    @Transactional(readOnly = true)
-    public int getCartItemsCount(Long userId) {
-        logger.debug("Getting cart items count for user: {}", userId);
-        return cartRepository.countTotalItemsByUserId(userId);
-    }
+    private CartResponse convertToResponse(Cart cart) {
+        List<CartResponse.CartItemResponse> itemResponses = cart.getCartItems().stream()
+                .map(item -> new CartResponse.CartItemResponse(
+                        item.getId(),
+                        item.getProductId(),
+                        item.getQuantity(),
+                        item.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
 
-    /**
-     * Get cart total price for user
-     */
-    @Transactional(readOnly = true)
-    public BigDecimal getCartTotalPrice(Long userId) {
-        logger.debug("Getting cart total price for user: {}", userId);
-        return cartRepository.calculateTotalPriceByUserId(userId);
-    }
-
-    /**
-     * Convert CartItem entity to CartItemResponse DTO
-     */
-    private CartDto.CartItemResponse convertToCartItemResponse(CartItem cartItem) {
-        try {
-            // Get current product details
-            ProductDto.ProductResponse product = productServiceClient.getProductById(cartItem.getProductId());
-            
-            return new CartDto.CartItemResponse(
-                    cartItem.getId(),
-                    cartItem.getProductId(),
-                    product != null ? product.getName() : "Unknown Product",
-                    product != null ? product.getDescription() : "",
-                    product != null ? product.getImageUrl() : "",
-                    cartItem.getQuantity(),
-                    cartItem.getPriceAtAddition(),
-                    product != null ? product.getPrice() : cartItem.getPriceAtAddition(),
-                    cartItem.getTotalPrice(),
-                    cartItem.getCreatedAt()
-            );
-        } catch (Exception e) {
-            logger.warn("Failed to fetch product details for product ID: {}", cartItem.getProductId(), e);
-            // Return response with basic information if product service is unavailable
-            return new CartDto.CartItemResponse(
-                    cartItem.getId(),
-                    cartItem.getProductId(),
-                    "Product Unavailable",
-                    "Product details could not be fetched",
-                    "",
-                    cartItem.getQuantity(),
-                    cartItem.getPriceAtAddition(),
-                    cartItem.getPriceAtAddition(),
-                    cartItem.getTotalPrice(),
-                    cartItem.getCreatedAt()
-            );
-        }
+        return new CartResponse(
+                cart.getId(),
+                cart.getUserId(),
+                cart.getCreatedAt(),
+                itemResponses
+        );
     }
 }

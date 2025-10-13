@@ -64,6 +64,21 @@ public class JwtService {
 		return username.equals(userDetails.getUsername()) && exp.after(new Date());
 	}
 
+	/**
+	 * Validates if a token is valid (not expired and properly signed) without requiring UserDetails
+	 * @param token JWT token to validate
+	 * @return true if token is valid, false otherwise
+	 */
+	public boolean isTokenValid(String token) {
+		try {
+			Claims claims = extractAllClaims(token);
+			Date exp = claims.getExpiration();
+			return exp.after(new Date());
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
 	public Date extractExpiration(String token) {
 		return extractAllClaims(token).getExpiration();
 	}
@@ -76,5 +91,3 @@ public class JwtService {
 				.getBody();
 	}
 }
-
-

@@ -18,6 +18,21 @@ public class GlobalExceptionHandler {
     
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex, WebRequest request) {
+        logger.error("User not found: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.NOT_FOUND.value(),
+            "User Not Found",
+            ex.getMessage(),
+            LocalDateTime.now(),
+            request.getDescription(false)
+        );
+        
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+    
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ValidationErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
         logger.error("Validation error: {}", ex.getMessage());
@@ -101,80 +116,5 @@ public class GlobalExceptionHandler {
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-    
-    // Error Response Classes
-    public static class ErrorResponse {
-        private int status;
-        private String error;
-        private String message;
-        private LocalDateTime timestamp;
-        private String path;
-        
-        public ErrorResponse(int status, String error, String message, LocalDateTime timestamp, String path) {
-            this.status = status;
-            this.error = error;
-            this.message = message;
-            this.timestamp = timestamp;
-            this.path = path;
-        }
-        
-        // Getters and Setters
-        public int getStatus() {
-            return status;
-        }
-        
-        public void setStatus(int status) {
-            this.status = status;
-        }
-        
-        public String getError() {
-            return error;
-        }
-        
-        public void setError(String error) {
-            this.error = error;
-        }
-        
-        public String getMessage() {
-            return message;
-        }
-        
-        public void setMessage(String message) {
-            this.message = message;
-        }
-        
-        public LocalDateTime getTimestamp() {
-            return timestamp;
-        }
-        
-        public void setTimestamp(LocalDateTime timestamp) {
-            this.timestamp = timestamp;
-        }
-        
-        public String getPath() {
-            return path;
-        }
-        
-        public void setPath(String path) {
-            this.path = path;
-        }
-    }
-    
-    public static class ValidationErrorResponse extends ErrorResponse {
-        private Map<String, String> validationErrors;
-        
-        public ValidationErrorResponse(int status, String error, String message, LocalDateTime timestamp, Map<String, String> validationErrors) {
-            super(status, error, message, timestamp, "");
-            this.validationErrors = validationErrors;
-        }
-        
-        public Map<String, String> getValidationErrors() {
-            return validationErrors;
-        }
-        
-        public void setValidationErrors(Map<String, String> validationErrors) {
-            this.validationErrors = validationErrors;
-        }
     }
 }

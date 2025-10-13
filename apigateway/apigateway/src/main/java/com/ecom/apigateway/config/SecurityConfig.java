@@ -15,8 +15,7 @@ public class SecurityConfig {
     SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
                 .csrf(CsrfSpec::disable)
-                .authorizeExchange(exchanges -> exchanges
-                        // Allow all requests - JWT Filter will handle authentication
+                .authorizeExchange(auth -> auth
                         .anyExchange().permitAll()
                 )
                 .build();
