@@ -1,15 +1,17 @@
-package com.ecom.inventoryservice.exception;
+package com.ecom.userservice.dto;
 
 import java.time.LocalDateTime;
 
-public class ErrorResponse {
+public class ErrorResponseDto {
     private int status;
     private String error;
     private String message;
     private LocalDateTime timestamp;
     private String path;
     
-    public ErrorResponse(int status, String error, String message, LocalDateTime timestamp, String path) {
+    public ErrorResponseDto() {}
+    
+    public ErrorResponseDto(int status, String error, String message, LocalDateTime timestamp, String path) {
         this.status = status;
         this.error = error;
         this.message = message;

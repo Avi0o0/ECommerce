@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,11 +20,14 @@ import com.ecom.userservice.dto.RegisterRequest;
 import com.ecom.userservice.dto.TokenResponse;
 import com.ecom.userservice.dto.TokenValidationResponse;
 import com.ecom.userservice.dto.ApiMessage;
+import com.ecom.userservice.dto.SuccessResponse;
 import com.ecom.userservice.entity.Role;
 import com.ecom.userservice.entity.UserAccount;
 import com.ecom.userservice.repository.UserAccountRepository;
 import com.ecom.userservice.repository.RoleRepository;
 import com.ecom.userservice.security.JwtService;
+import com.ecom.userservice.exception.InvalidCredentialsException;
+import com.ecom.userservice.exception.UsernameAlreadyExistsException;
 
 @RestController
 @RequestMapping("/auth")
@@ -59,9 +63,12 @@ public class AuthController {
 
             logger.info("Login successful for user: {}", request.username());
             return ResponseEntity.ok(new TokenResponse(token));
+        } catch (BadCredentialsException e) {
+            logger.warn("Login failed for user: {} - Invalid credentials", request.username());
+            throw new InvalidCredentialsException("Invalid username or password");
         } catch (Exception e) {
             logger.error("Login failed for user: {}. Error: {}", request.username(), e.getMessage());
-            throw e;
+            throw new InvalidCredentialsException("Authentication failed");
         }
     }
 
@@ -94,13 +101,13 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiMessage> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<SuccessResponse> register(@RequestBody RegisterRequest request) {
         logger.info("User registration attempt for username: {}", request.username());
 
         try {
             if (userRepo.existsByUsername(request.username())) {
                 logger.warn("Registration failed - username already exists: {}", request.username());
-                return ResponseEntity.badRequest().body(new ApiMessage("username already exists"));
+                throw new UsernameAlreadyExistsException("Username '" + request.username() + "' already exists");
             }
 
             UserAccount user = new UserAccount();
@@ -118,10 +125,13 @@ public class AuthController {
             userRepo.save(user);
 
             logger.info("User registration successful for username: {}", request.username());
-            return ResponseEntity.ok(new ApiMessage("registered"));
+            SuccessResponse response = new SuccessResponse(201, "User registered successfully");
+            return ResponseEntity.status(201).body(response);
+        } catch (UsernameAlreadyExistsException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("User registration failed for username: {}. Error: {}", request.username(), e.getMessage());
-            throw e;
+            throw new RuntimeException("Registration failed: " + e.getMessage());
         }
     }
 }
