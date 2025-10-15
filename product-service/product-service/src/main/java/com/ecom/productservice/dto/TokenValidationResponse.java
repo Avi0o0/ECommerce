@@ -5,14 +5,16 @@ import java.util.List;
 public class TokenValidationResponse {
     private String token;
     private String username;
+    private Long userId;
     private List<String> roles;
     private boolean valid;
     
     public TokenValidationResponse() {}
     
-    public TokenValidationResponse(String token, String username, List<String> roles, boolean valid) {
+    public TokenValidationResponse(String token, String username, Long userId, List<String> roles, boolean valid) {
         this.token = token;
         this.username = username;
+        this.userId = userId;
         this.roles = roles;
         this.valid = valid;
     }
@@ -31,6 +33,14 @@ public class TokenValidationResponse {
     
     public void setUsername(String username) {
         this.username = username;
+    }
+    
+    public Long getUserId() {
+        return userId;
+    }
+    
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
     
     public List<String> getRoles() {

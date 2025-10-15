@@ -1,18 +1,16 @@
 package com.ecom.apigateway.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
 public class GatewayConfig {
 
-    @Bean
-    WebClient.Builder webClientBuilder() {
-        return WebClient.builder();
-    }
+    @Autowired
+    private AuthenticationFilter authenticationFilter;
 
     @Bean
     RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
@@ -23,33 +21,38 @@ public class GatewayConfig {
                         .uri("lb://USER-SERVICE")
                 )
                 
-                // User Service
+                // User Service - Requires authentication for user management
                 .route("user-service", r -> r
                         .path("/users/**")
+                        .filters(f -> f.filter(authenticationFilter.apply(new AuthenticationFilter.Config())))
                         .uri("lb://USER-SERVICE")
                 )
                 
-                // Product Service
+                // Product Service - Requires authentication for admin operations
                 .route("product-service", r -> r
                         .path("/products/**")
+                        .filters(f -> f.filter(authenticationFilter.apply(new AuthenticationFilter.Config())))
                         .uri("lb://PRODUCT-SERVICE")
                 )
                 
-                // Order Service
+                // Order Service - Requires authentication
                 .route("order-service", r -> r
                         .path("/orders/**")
+                        .filters(f -> f.filter(authenticationFilter.apply(new AuthenticationFilter.Config())))
                         .uri("lb://ORDER-SERVICE")
                 )
                 
-                // Payment Service
+                // Payment Service - Requires authentication
                 .route("payment-service", r -> r
                         .path("/payments/**")
+                        .filters(f -> f.filter(authenticationFilter.apply(new AuthenticationFilter.Config())))
                         .uri("lb://PAYMENT-SERVICE")
                 )
                 
-                // Cart Service
+                // Cart Service - Requires authentication
                 .route("cart-service", r -> r
                         .path("/cart/**")
+                        .filters(f -> f.filter(authenticationFilter.apply(new AuthenticationFilter.Config())))
                         .uri("lb://CART-SERVICE")
                 )
                 

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
+import com.ecom.userservice.constants.UserServiceConstants;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,14 +22,14 @@ public class GlobalExceptionHandler {
     
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex, WebRequest request) {
-        logger.error("User not found: {} at path: {}", ex.getMessage(), request.getDescription(false));
+        logger.error(UserServiceConstants.LOG_USER_NOT_FOUND, ex.getMessage(), request.getDescription(false));
         
         ErrorResponse errorResponse = new ErrorResponse(
             HttpStatus.NOT_FOUND.value(),
-            "User Not Found",
+            UserServiceConstants.USER_NOT_FOUND_TITLE,
             ex.getMessage(),
             LocalDateTime.now(),
-            "" // Remove path from response
+            UserServiceConstants.EMPTY_STRING // Remove path from response
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
@@ -36,14 +37,14 @@ public class GlobalExceptionHandler {
     
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleInvalidCredentialsException(InvalidCredentialsException ex, WebRequest request) {
-        logger.error("Invalid credentials: {} at path: {}", ex.getMessage(), request.getDescription(false));
+        logger.error(UserServiceConstants.LOG_INVALID_CREDENTIALS, ex.getMessage(), request.getDescription(false));
         
         ErrorResponse errorResponse = new ErrorResponse(
             HttpStatus.UNAUTHORIZED.value(),
-            "Invalid Credentials",
-            "Invalid username or password",
+            UserServiceConstants.INVALID_CREDENTIALS_TITLE,
+            UserServiceConstants.INVALID_CREDENTIALS_MESSAGE,
             LocalDateTime.now(),
-            "" // Remove path from response
+            UserServiceConstants.EMPTY_STRING // Remove path from response
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
@@ -51,14 +52,14 @@ public class GlobalExceptionHandler {
     
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
-        logger.error("Bad credentials: {} at path: {}", ex.getMessage(), request.getDescription(false));
+        logger.error(UserServiceConstants.LOG_BAD_CREDENTIALS, ex.getMessage(), request.getDescription(false));
         
         ErrorResponse errorResponse = new ErrorResponse(
             HttpStatus.UNAUTHORIZED.value(),
-            "Invalid Credentials",
-            "Invalid username or password",
+            UserServiceConstants.INVALID_CREDENTIALS_TITLE,
+            UserServiceConstants.INVALID_CREDENTIALS_MESSAGE,
             LocalDateTime.now(),
-            "" // Remove path from response
+            UserServiceConstants.EMPTY_STRING // Remove path from response
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
@@ -73,7 +74,7 @@ public class GlobalExceptionHandler {
             "Username Already Exists",
             ex.getMessage(),
             LocalDateTime.now(),
-            "" // Remove path from response
+            UserServiceConstants.EMPTY_STRING // Remove path from response
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
@@ -88,10 +89,25 @@ public class GlobalExceptionHandler {
             "Invalid Password",
             ex.getMessage(),
             LocalDateTime.now(),
-            "" // Remove path from response
+            UserServiceConstants.EMPTY_STRING // Remove path from response
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+    
+    @ExceptionHandler(PasswordVerificationFailedException.class)
+    public ResponseEntity<ErrorResponse> handlePasswordVerificationFailedException(PasswordVerificationFailedException ex, WebRequest request) {
+        logger.error("Password verification failed: {} at path: {}", ex.getMessage(), request.getDescription(false));
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.UNAUTHORIZED.value(),
+            UserServiceConstants.PASSWORD_VERIFICATION_FAILED_TITLE,
+            ex.getMessage(),
+            LocalDateTime.now(),
+            UserServiceConstants.EMPTY_STRING // Remove path from response
+        );
+        
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
     
     @ExceptionHandler(AuthenticationException.class)
@@ -103,7 +119,7 @@ public class GlobalExceptionHandler {
             "Authentication Failed",
             ex.getMessage(),
             LocalDateTime.now(),
-            "" // Remove path from response
+            UserServiceConstants.EMPTY_STRING // Remove path from response
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
@@ -140,7 +156,7 @@ public class GlobalExceptionHandler {
             "Invalid Request",
             ex.getMessage(),
             LocalDateTime.now(),
-            "" // Remove path from response
+            UserServiceConstants.EMPTY_STRING // Remove path from response
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -158,7 +174,7 @@ public class GlobalExceptionHandler {
             "Method Not Allowed",
             message,
             LocalDateTime.now(),
-            "" // Remove path from response
+            UserServiceConstants.EMPTY_STRING // Remove path from response
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.METHOD_NOT_ALLOWED);
@@ -173,7 +189,7 @@ public class GlobalExceptionHandler {
             "Access Denied",
             "You don't have permission to perform this action. Admin role required.",
             LocalDateTime.now(),
-            "" // Remove path from response
+            UserServiceConstants.EMPTY_STRING // Remove path from response
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
@@ -188,7 +204,7 @@ public class GlobalExceptionHandler {
             "Internal Server Error",
             "An unexpected error occurred",
             LocalDateTime.now(),
-            "" // Remove path from response
+            UserServiceConstants.EMPTY_STRING // Remove path from response
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);

@@ -11,21 +11,20 @@ public class ProductDto {
         private String description;
         private BigDecimal price;
         private String stockKeepingUnit;
-        private Boolean isActive;
+        private Integer stockQuantity;
         private LocalDateTime createdAt;
-        private String imageUrl; // For backward compatibility
         
         // Constructors
         public ProductResponse() {}
         
         public ProductResponse(Long id, String name, String description, BigDecimal price, 
-                              String stockKeepingUnit, Boolean isActive, LocalDateTime createdAt) {
+                              String stockKeepingUnit, Integer stockQuantity, LocalDateTime createdAt) {
             this.id = id;
             this.name = name;
             this.description = description;
             this.price = price;
             this.stockKeepingUnit = stockKeepingUnit;
-            this.isActive = isActive;
+            this.stockQuantity = stockQuantity;
             this.createdAt = createdAt;
         }
         
@@ -70,12 +69,12 @@ public class ProductDto {
             this.stockKeepingUnit = stockKeepingUnit;
         }
         
-        public Boolean getIsActive() {
-            return isActive;
+        public Integer getStockQuantity() {
+            return stockQuantity;
         }
         
-        public void setIsActive(Boolean isActive) {
-            this.isActive = isActive;
+        public void setStockQuantity(Integer stockQuantity) {
+            this.stockQuantity = stockQuantity;
         }
         
         public LocalDateTime getCreatedAt() {
@@ -86,12 +85,14 @@ public class ProductDto {
             this.createdAt = createdAt;
         }
         
-        public String getImageUrl() {
-            return imageUrl;
+        // Helper method to check if product is available
+        public boolean isAvailable() {
+            return stockQuantity != null && stockQuantity > 0;
         }
         
-        public void setImageUrl(String imageUrl) {
-            this.imageUrl = imageUrl;
+        // Helper method to check if product has sufficient stock
+        public boolean hasSufficientStock(Integer requestedQuantity) {
+            return stockQuantity != null && stockQuantity >= requestedQuantity;
         }
     }
 }

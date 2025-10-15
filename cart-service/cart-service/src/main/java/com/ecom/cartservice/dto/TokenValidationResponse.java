@@ -1,4 +1,4 @@
-package com.ecom.userservice.dto;
+package com.ecom.cartservice.dto;
 
 import java.util.List;
 

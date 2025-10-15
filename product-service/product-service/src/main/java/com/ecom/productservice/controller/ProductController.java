@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ecom.productservice.constants.ProductServiceConstants;
 import com.ecom.productservice.dto.ProductRequest;
 import com.ecom.productservice.dto.ProductResponse;
 import com.ecom.productservice.dto.SuccessResponse;
@@ -40,14 +41,14 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<List<ProductResponse>> getAllProducts() {
-        logger.info("GET /products - Getting all products");
+        logger.info(ProductServiceConstants.LOG_GET_ALL_PRODUCTS_REQUEST);
         List<ProductResponse> products = productService.getAllProducts();
         return ResponseEntity.ok(products);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
-        logger.info("GET /products/{} - Getting product by ID", id);
+        logger.info(ProductServiceConstants.LOG_GET_PRODUCT_BY_ID_REQUEST, id);
         ProductResponse product = productService.getProductById(id);
         return ResponseEntity.ok(product);
     }
@@ -55,18 +56,18 @@ public class ProductController {
     @PostMapping
     public ResponseEntity<?> createProduct(@Valid @RequestBody ProductRequest request,
                                           @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        logger.info("POST /products - Creating new product: {}", request.getName());
+        logger.info(ProductServiceConstants.LOG_POST_CREATE_PRODUCT_REQUEST, request.getName());
         
         if (authHeader == null) {
-            logger.warn("No authorization header provided");
+            logger.warn(ProductServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), "Authorization header required"));
+                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
         }
         
         if (!authenticationService.isAdmin(authHeader)) {
-            logger.warn("Access denied - user is not admin");
+            logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), "Admin access required"));
+                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE));
         }
         
         ProductResponse product = productService.createProduct(request);
@@ -76,18 +77,18 @@ public class ProductController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest request,
                                           @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        logger.info("PUT /products/{} - Updating product", id);
+        logger.info(ProductServiceConstants.LOG_PUT_UPDATE_PRODUCT_REQUEST, id);
         
         if (authHeader == null) {
-            logger.warn("No authorization header provided");
+            logger.warn(ProductServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), "Authorization header required"));
+                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
         }
         
         if (!authenticationService.isAdmin(authHeader)) {
-            logger.warn("Access denied - user is not admin");
+            logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), "Admin access required"));
+                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE));
         }
         
         ProductResponse product = productService.updateProduct(id, request);
@@ -97,28 +98,28 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id,
                                           @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        logger.info("DELETE /products/{} - Deleting product", id);
+        logger.info(ProductServiceConstants.LOG_DELETE_PRODUCT_REQUEST, id);
         
         if (authHeader == null) {
-            logger.warn("No authorization header provided");
+            logger.warn(ProductServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), "Authorization header required"));
+                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
         }
         
         if (!authenticationService.isAdmin(authHeader)) {
-            logger.warn("Access denied - user is not admin");
+            logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), "Admin access required"));
+                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE));
         }
         
         productService.deleteProduct(id);
-        SuccessResponse response = new SuccessResponse(HttpStatus.OK.value(), "Product deleted successfully");
+        SuccessResponse response = new SuccessResponse(HttpStatus.OK.value(), ProductServiceConstants.PRODUCT_DELETED_SUCCESS_MESSAGE);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/sku/{sku}")
     public ResponseEntity<ProductResponse> getProductBySku(@PathVariable String sku) {
-        logger.info("GET /products/sku/{} - Getting product by SKU", sku);
+        logger.info(ProductServiceConstants.LOG_GET_PRODUCT_BY_SKU_REQUEST, sku);
         ProductResponse product = productService.getProductBySku(sku);
         return ResponseEntity.ok(product);
     }
@@ -127,18 +128,18 @@ public class ProductController {
     public ResponseEntity<?> addStock(@PathVariable String sku,
                                     @RequestParam Integer quantity,
                                     @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        logger.info("PUT /products/{}/stock/add - Adding {} units", sku, quantity);
+        logger.info(ProductServiceConstants.LOG_PUT_ADD_STOCK_REQUEST, sku, quantity);
         
         if (authHeader == null) {
-            logger.warn("No authorization header provided");
+            logger.warn(ProductServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), "Authorization header required"));
+                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
         }
         
         if (!authenticationService.isAdmin(authHeader)) {
-            logger.warn("Access denied - user is not admin");
+            logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), "Admin access required"));
+                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE));
         }
         
         ProductResponse product = productService.addStock(sku, quantity);
@@ -149,18 +150,18 @@ public class ProductController {
     public ResponseEntity<?> reduceStock(@PathVariable String sku,
                                        @RequestParam Integer quantity,
                                        @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        logger.info("PUT /products/{}/stock/reduce - Reducing {} units", sku, quantity);
+        logger.info(ProductServiceConstants.LOG_PUT_REDUCE_STOCK_REQUEST, sku, quantity);
         
         if (authHeader == null) {
-            logger.warn("No authorization header provided");
+            logger.warn(ProductServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), "Authorization header required"));
+                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
         }
         
         if (!authenticationService.isAdmin(authHeader)) {
-            logger.warn("Access denied - user is not admin");
+            logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), "Admin access required"));
+                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE));
         }
         
         ProductResponse product = productService.reduceStock(sku, quantity);

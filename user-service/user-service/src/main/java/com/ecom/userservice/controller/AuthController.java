@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -17,17 +18,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ecom.userservice.dto.LoginRequest;
 import com.ecom.userservice.dto.RegisterRequest;
+import com.ecom.userservice.dto.SuccessResponse;
 import com.ecom.userservice.dto.TokenResponse;
 import com.ecom.userservice.dto.TokenValidationResponse;
-import com.ecom.userservice.dto.ApiMessage;
-import com.ecom.userservice.dto.SuccessResponse;
 import com.ecom.userservice.entity.Role;
 import com.ecom.userservice.entity.UserAccount;
-import com.ecom.userservice.repository.UserAccountRepository;
-import com.ecom.userservice.repository.RoleRepository;
-import com.ecom.userservice.security.JwtService;
 import com.ecom.userservice.exception.InvalidCredentialsException;
 import com.ecom.userservice.exception.UsernameAlreadyExistsException;
+import com.ecom.userservice.repository.RoleRepository;
+import com.ecom.userservice.repository.UserAccountRepository;
+import com.ecom.userservice.security.JwtService;
 
 @RestController
 @RequestMapping("/auth")
@@ -67,7 +67,7 @@ public class AuthController {
             logger.warn("Login failed for user: {} - Invalid credentials", request.username());
             throw new InvalidCredentialsException("Invalid username or password");
         } catch (Exception e) {
-            logger.error("Login failed for user: {}. Error: {}", request.username(), e.getMessage());
+            logger.error("Login failed for user: {}. Error: {}", request.username(), e.getMessage(), e);
             throw new InvalidCredentialsException("Authentication failed");
         }
     }
@@ -81,22 +81,28 @@ public class AuthController {
             if (isValid) {
                 String username = jwtService.extractUsername(request.token());
                 List<String> roles = jwtService.extractRoles(request.token());
-                logger.info("Token validation successful for user: {} with roles: {}", username, roles);
+                
+                // Get userId from username
+                Long userId = userRepo.findByUsername(username)
+                        .map(user -> user.getId())
+                        .orElse(null);
+                
+                logger.info("Token validation successful for user: {} (ID: {}) with roles: {}", username, userId, roles);
                 
                 TokenValidationResponse response = new TokenValidationResponse(
-                    request.token(), username, roles, true);
+                    request.token(), username, userId, roles, true);
                 return ResponseEntity.ok(response);
             } else {
                 logger.warn("Token validation failed");
                 TokenValidationResponse response = new TokenValidationResponse(
-                    request.token(), null, null, false);
+                    request.token(), null, null, null, false);
                 return ResponseEntity.ok(response);
             }
         } catch (Exception e) {
-            logger.error("Token validation error: {}", e.getMessage());
+            logger.error("Token validation error: {}", e.getMessage(), e);
             TokenValidationResponse response = new TokenValidationResponse(
-                request.token(), null, null, false);
-            return ResponseEntity.ok(response);
+                request.token(), null, null, null, false);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED.value()).body(response);
         }
     }
 
@@ -130,7 +136,7 @@ public class AuthController {
         } catch (UsernameAlreadyExistsException e) {
             throw e;
         } catch (Exception e) {
-            logger.error("User registration failed for username: {}. Error: {}", request.username(), e.getMessage());
+            logger.error("User registration failed for username: {}. Error: {}", request.username(), e.getMessage(), e);
             throw new RuntimeException("Registration failed: " + e.getMessage());
         }
     }

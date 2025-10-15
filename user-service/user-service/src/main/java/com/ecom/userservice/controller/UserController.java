@@ -15,14 +15,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ecom.userservice.dto.ApiMessage;
+import com.ecom.userservice.constants.UserServiceConstants;
 import com.ecom.userservice.dto.SuccessResponse;
-import com.ecom.userservice.dto.UserListResponse;
 import com.ecom.userservice.dto.UpdatePasswordRequest;
+import com.ecom.userservice.dto.UserListResponse;
 import com.ecom.userservice.dto.VerifyPasswordRequest;
 import com.ecom.userservice.entity.UserAccount;
-import com.ecom.userservice.exception.UserNotFoundException;
 import com.ecom.userservice.exception.InvalidPasswordException;
+import com.ecom.userservice.exception.PasswordVerificationFailedException;
+import com.ecom.userservice.exception.UserNotFoundException;
 import com.ecom.userservice.repository.UserAccountRepository;
 
 import jakarta.validation.Valid;
@@ -42,13 +43,13 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<UserListResponse> listUsers() {
-        logger.info("Request to list all users received");
+        logger.info(UserServiceConstants.LOG_REQUEST_TO_LIST_ALL_USERS);
         List<UserAccount> users = userRepo.findAll();
-        logger.info("Successfully retrieved {} users from database", users.size());
+        logger.info(UserServiceConstants.LOG_SUCCESSFULLY_RETRIEVED_USERS, users.size());
         
         UserListResponse response = new UserListResponse(
             200, 
-            "Users retrieved successfully", 
+            UserServiceConstants.USERS_RETRIEVED_SUCCESS_MESSAGE, 
             users.size(), 
             users
         );
@@ -57,81 +58,87 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<SuccessResponse> getUser(@PathVariable Long id) {
-        logger.info("Request to get user by ID: {}", id);
+        logger.info(UserServiceConstants.LOG_REQUEST_TO_GET_USER_BY_ID, id);
 
         UserAccount user = userRepo.findById(id)
                 .orElseThrow(() -> {
-                    logger.warn("User not found with ID: {}", id);
-                    return new UserNotFoundException("User not found with ID: " + id);
+                    logger.warn(UserServiceConstants.LOG_USER_NOT_FOUND_WITH_ID, id);
+                    return new UserNotFoundException(UserServiceConstants.USER_NOT_FOUND_MESSAGE + id);
                 });
         
-        logger.info("Successfully retrieved user: {} with ID: {}", user.getUsername(), id);
-        SuccessResponse response = new SuccessResponse(200, "User retrieved successfully", user);
+        logger.info(UserServiceConstants.LOG_SUCCESSFULLY_RETRIEVED_USER, user.getUsername(), id);
+        SuccessResponse response = new SuccessResponse(200, UserServiceConstants.USER_RETRIEVED_SUCCESS_MESSAGE, user);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<SuccessResponse> deleteUser(@PathVariable Long id) {
-        logger.info("Request to delete user with ID: {}", id);
+        logger.info(UserServiceConstants.LOG_REQUEST_TO_DELETE_USER, id);
         
         UserAccount user = userRepo.findById(id)
                 .orElseThrow(() -> {
-                    logger.warn("User not found with ID: {}", id);
-                    return new UserNotFoundException("User not found with ID: " + id);
+                    logger.warn(UserServiceConstants.LOG_USER_NOT_FOUND_WITH_ID, id);
+                    return new UserNotFoundException(UserServiceConstants.USER_NOT_FOUND_MESSAGE + id);
                 });
         
         userRepo.delete(user);
-        logger.info("User {} deleted successfully with ID: {}", user.getUsername(), id);
-        SuccessResponse response = new SuccessResponse(200, "User deleted successfully");
+        logger.info(UserServiceConstants.LOG_USER_DELETED_SUCCESSFULLY, user.getUsername(), id);
+        SuccessResponse response = new SuccessResponse(200, UserServiceConstants.USER_DELETED_SUCCESS_MESSAGE);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<SuccessResponse> updatePassword(@PathVariable Long id, 
                                                     @Valid @RequestBody UpdatePasswordRequest request) {
-        logger.info("Request to update password for user ID: {}", id);
+        logger.info(UserServiceConstants.LOG_REQUEST_TO_UPDATE_PASSWORD, id);
         
         UserAccount user = userRepo.findById(id)
                 .orElseThrow(() -> {
-                    logger.warn("User not found with ID: {}", id);
-                    return new UserNotFoundException("User not found with ID: " + id);
+                    logger.warn(UserServiceConstants.LOG_USER_NOT_FOUND_WITH_ID, id);
+                    return new UserNotFoundException(UserServiceConstants.USER_NOT_FOUND_MESSAGE + id);
                 });
         
         // Verify current password
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
-            logger.warn("Invalid current password for user ID: {}", id);
-            throw new InvalidPasswordException("Current password is incorrect");
+            logger.warn(UserServiceConstants.LOG_INVALID_CURRENT_PASSWORD, id);
+            throw new InvalidPasswordException(UserServiceConstants.CURRENT_PASSWORD_INCORRECT_MESSAGE);
         }
         
         // Update password
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepo.save(user);
         
-        logger.info("Password updated successfully for user: {} with ID: {}", user.getUsername(), id);
-        SuccessResponse response = new SuccessResponse(200, "Password updated successfully");
+        logger.info(UserServiceConstants.LOG_PASSWORD_UPDATED_SUCCESSFULLY, user.getUsername(), id);
+        SuccessResponse response = new SuccessResponse(200, UserServiceConstants.PASSWORD_UPDATED_SUCCESS_MESSAGE);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/verify-password")
     public ResponseEntity<SuccessResponse> verifyPassword(@PathVariable Long id, 
                                                     @Valid @RequestBody VerifyPasswordRequest request) {
-        logger.info("Request to verify password for user ID: {}", id);
+        logger.info(UserServiceConstants.LOG_REQUEST_TO_VERIFY_PASSWORD, id);
         
         UserAccount user = userRepo.findById(id)
                 .orElseThrow(() -> {
-                    logger.warn("User not found with ID: {}", id);
-                    return new UserNotFoundException("User not found with ID: " + id);
+                    logger.warn(UserServiceConstants.LOG_USER_NOT_FOUND_WITH_ID, id);
+                    return new UserNotFoundException(UserServiceConstants.USER_NOT_FOUND_MESSAGE + id);
                 });
         
-        boolean isValid = passwordEncoder.matches(request.getPassword(), user.getPasswordHash());
+        boolean isValid;
+        try {
+            isValid = passwordEncoder.matches(request.getPassword(), user.getPasswordHash());
+        } catch (Exception e) {
+            logger.error(UserServiceConstants.LOG_PASSWORD_VERIFICATION_ERROR, id, e.getMessage(), e);
+            throw new PasswordVerificationFailedException(UserServiceConstants.PASSWORD_VERIFICATION_SYSTEM_ERROR_MESSAGE, e);
+        }
         
         if (isValid) {
-            logger.info("Password verification successful for user: {} with ID: {}", user.getUsername(), id);
-            SuccessResponse response = new SuccessResponse(200, "Password is valid");
+            logger.info(UserServiceConstants.LOG_PASSWORD_VERIFICATION_SUCCESSFUL, user.getUsername(), id);
+            SuccessResponse response = new SuccessResponse(200, UserServiceConstants.PASSWORD_IS_VALID_MESSAGE);
             return ResponseEntity.ok(response);
         } else {
-            logger.warn("Password verification failed for user ID: {}", id);
-            throw new InvalidPasswordException("Password is incorrect");
+            logger.warn(UserServiceConstants.LOG_PASSWORD_VERIFICATION_FAILED, id);
+            throw new PasswordVerificationFailedException(UserServiceConstants.PASSWORD_VERIFICATION_FAILED_MESSAGE);
         }
     }
 }

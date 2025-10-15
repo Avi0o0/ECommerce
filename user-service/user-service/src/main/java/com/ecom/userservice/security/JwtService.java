@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,6 +21,8 @@ import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JwtService {
+
+	private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
 
 	@Value("${security.jwt.secret}")
 	private String secret;
@@ -75,6 +79,7 @@ public class JwtService {
 			Date exp = claims.getExpiration();
 			return exp.after(new Date());
 		} catch (Exception e) {
+			logger.warn("Token validation failed: {}", e.getMessage(), e);
 			return false;
 		}
 	}
