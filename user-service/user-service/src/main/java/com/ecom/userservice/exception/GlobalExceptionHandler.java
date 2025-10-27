@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 import com.ecom.userservice.constants.UserServiceConstants;
-import java.time.LocalDateTime;
+import com.ecom.userservice.dto.GlobalErrorResponse;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,112 +22,98 @@ public class GlobalExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleUserNotFoundException(UserNotFoundException ex, WebRequest request) {
         logger.error(UserServiceConstants.LOG_USER_NOT_FOUND, ex.getMessage(), request.getDescription(false));
         
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.NOT_FOUND.value(),
-            UserServiceConstants.USER_NOT_FOUND_TITLE,
-            ex.getMessage(),
-            LocalDateTime.now(),
-            UserServiceConstants.EMPTY_STRING // Remove path from response
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            404,
+            "User Not Found",
+            ex.getMessage()
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
     
     @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidCredentialsException(InvalidCredentialsException ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleInvalidCredentialsException(InvalidCredentialsException ex, WebRequest request) {
         logger.error(UserServiceConstants.LOG_INVALID_CREDENTIALS, ex.getMessage(), request.getDescription(false));
         
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.UNAUTHORIZED.value(),
-            UserServiceConstants.INVALID_CREDENTIALS_TITLE,
-            UserServiceConstants.INVALID_CREDENTIALS_MESSAGE,
-            LocalDateTime.now(),
-            UserServiceConstants.EMPTY_STRING // Remove path from response
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            401,
+            "Invalid Credentials",
+            UserServiceConstants.INVALID_CREDENTIALS_MESSAGE
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
     
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
         logger.error(UserServiceConstants.LOG_BAD_CREDENTIALS, ex.getMessage(), request.getDescription(false));
         
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.UNAUTHORIZED.value(),
-            UserServiceConstants.INVALID_CREDENTIALS_TITLE,
-            UserServiceConstants.INVALID_CREDENTIALS_MESSAGE,
-            LocalDateTime.now(),
-            UserServiceConstants.EMPTY_STRING // Remove path from response
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            401,
+            "Invalid Credentials",
+            UserServiceConstants.INVALID_CREDENTIALS_MESSAGE
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
     
     @ExceptionHandler(UsernameAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleUsernameAlreadyExistsException(UsernameAlreadyExistsException ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleUsernameAlreadyExistsException(UsernameAlreadyExistsException ex, WebRequest request) {
         logger.error("Username already exists: {} at path: {}", ex.getMessage(), request.getDescription(false));
         
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.CONFLICT.value(),
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            409,
             "Username Already Exists",
-            ex.getMessage(),
-            LocalDateTime.now(),
-            UserServiceConstants.EMPTY_STRING // Remove path from response
+            ex.getMessage()
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
     
     @ExceptionHandler(InvalidPasswordException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidPasswordException(InvalidPasswordException ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleInvalidPasswordException(InvalidPasswordException ex, WebRequest request) {
         logger.error("Invalid password: {} at path: {}", ex.getMessage(), request.getDescription(false));
         
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.BAD_REQUEST.value(),
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            400,
             "Invalid Password",
-            ex.getMessage(),
-            LocalDateTime.now(),
-            UserServiceConstants.EMPTY_STRING // Remove path from response
+            ex.getMessage()
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
     
     @ExceptionHandler(PasswordVerificationFailedException.class)
-    public ResponseEntity<ErrorResponse> handlePasswordVerificationFailedException(PasswordVerificationFailedException ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handlePasswordVerificationFailedException(PasswordVerificationFailedException ex, WebRequest request) {
         logger.error("Password verification failed: {} at path: {}", ex.getMessage(), request.getDescription(false));
         
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.UNAUTHORIZED.value(),
-            UserServiceConstants.PASSWORD_VERIFICATION_FAILED_TITLE,
-            ex.getMessage(),
-            LocalDateTime.now(),
-            UserServiceConstants.EMPTY_STRING // Remove path from response
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            401,
+            "Password Verification Failed",
+            ex.getMessage()
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
     
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleAuthenticationException(AuthenticationException ex, WebRequest request) {
         logger.error("Authentication error: {} at path: {}", ex.getMessage(), request.getDescription(false));
         
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.UNAUTHORIZED.value(),
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            401,
             "Authentication Failed",
-            ex.getMessage(),
-            LocalDateTime.now(),
-            UserServiceConstants.EMPTY_STRING // Remove path from response
+            ex.getMessage()
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
     
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ValidationErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<GlobalErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
         logger.error("Validation error: {}", ex.getMessage());
         
         Map<String, String> errors = new HashMap<>();
@@ -136,75 +123,74 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
         
-        ValidationErrorResponse errorResponse = new ValidationErrorResponse(
-            HttpStatus.BAD_REQUEST.value(),
+        // Convert validation errors to a single message
+        StringBuilder errorMessage = new StringBuilder();
+        errors.forEach((field, message) -> {
+            if (errorMessage.length() > 0) {
+                errorMessage.append(", ");
+            }
+            errorMessage.append(field).append(": ").append(message);
+        });
+        
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            400,
             "Validation Failed",
-            "Request validation failed",
-            LocalDateTime.now(),
-            errors
+            errorMessage.toString()
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
     
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
         logger.error("Illegal argument: {} at path: {}", ex.getMessage(), request.getDescription(false));
         
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.BAD_REQUEST.value(),
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            400,
             "Invalid Request",
-            ex.getMessage(),
-            LocalDateTime.now(),
-            UserServiceConstants.EMPTY_STRING // Remove path from response
+            ex.getMessage()
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
     
     @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ErrorResponse> handleMethodNotSupportedException(org.springframework.web.HttpRequestMethodNotSupportedException ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleMethodNotSupportedException(org.springframework.web.HttpRequestMethodNotSupportedException ex, WebRequest request) {
         logger.error("Method not supported: {} at path: {}", ex.getMessage(), request.getDescription(false));
         
         String supportedMethods = ex.getSupportedMethods() != null ? String.join(", ", ex.getSupportedMethods()) : "Unknown";
         String message = String.format("Request method '%s' is not supported. Supported methods: %s", ex.getMethod(), supportedMethods);
         
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.METHOD_NOT_ALLOWED.value(),
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            405,
             "Method Not Allowed",
-            message,
-            LocalDateTime.now(),
-            UserServiceConstants.EMPTY_STRING // Remove path from response
+            message
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.METHOD_NOT_ALLOWED);
     }
     
     @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDeniedException(org.springframework.security.access.AccessDeniedException ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleAccessDeniedException(org.springframework.security.access.AccessDeniedException ex, WebRequest request) {
         logger.error("Access denied: {} at path: {}", ex.getMessage(), request.getDescription(false));
         
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.FORBIDDEN.value(),
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            403,
             "Access Denied",
-            "You don't have permission to perform this action. Admin role required.",
-            LocalDateTime.now(),
-            UserServiceConstants.EMPTY_STRING // Remove path from response
+            "You don't have permission to perform this action. Admin role required."
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
     
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleGenericException(Exception ex, WebRequest request) {
         logger.error("Unexpected error occurred: {} at path: {}", ex.getMessage(), request.getDescription(false), ex);
         
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            500,
             "Internal Server Error",
-            "An unexpected error occurred",
-            LocalDateTime.now(),
-            UserServiceConstants.EMPTY_STRING // Remove path from response
+            "An unexpected error occurred"
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);

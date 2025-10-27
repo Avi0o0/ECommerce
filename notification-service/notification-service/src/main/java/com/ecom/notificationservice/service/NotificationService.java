@@ -2,7 +2,6 @@ package com.ecom.notificationservice.service;
 
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +68,7 @@ public class NotificationService {
         List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
         return notifications.stream()
                 .map(this::convertToResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     /**

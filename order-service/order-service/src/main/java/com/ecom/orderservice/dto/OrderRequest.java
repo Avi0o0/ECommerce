@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public class OrderRequest {
@@ -15,15 +16,19 @@ public class OrderRequest {
     @DecimalMin(value = "0.01", message = "Total amount must be greater than 0")
     private BigDecimal totalAmount;
     
+    @NotBlank(message = "Payment method is required")
+    private String paymentMethod;
+    
     @NotNull(message = "Order items are required")
     private List<OrderItemRequest> orderItems;
     
     // Constructors
     public OrderRequest() {}
     
-    public OrderRequest(Long userId, BigDecimal totalAmount, List<OrderItemRequest> orderItems) {
+    public OrderRequest(Long userId, BigDecimal totalAmount, String paymentMethod, List<OrderItemRequest> orderItems) {
         this.userId = userId;
         this.totalAmount = totalAmount;
+        this.paymentMethod = paymentMethod;
         this.orderItems = orderItems;
     }
     
@@ -42,6 +47,14 @@ public class OrderRequest {
     
     public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
+    }
+    
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+    
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
     }
     
     public List<OrderItemRequest> getOrderItems() {

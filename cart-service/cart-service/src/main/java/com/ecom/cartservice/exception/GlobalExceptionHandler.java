@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 
 import com.ecom.cartservice.constants.CartServiceConstants;
-import java.time.LocalDateTime;
+import com.ecom.cartservice.dto.GlobalErrorResponse;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,46 +22,40 @@ public class GlobalExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(CartNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleCartNotFoundException(CartNotFoundException ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleCartNotFoundException(CartNotFoundException ex, WebRequest request) {
         logger.warn(CartServiceConstants.LOG_CART_NOT_FOUND, ex.getMessage());
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.NOT_FOUND.value(),
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            404,
             CartServiceConstants.CART_NOT_FOUND_TITLE,
-            ex.getMessage(),
-            LocalDateTime.now(),
-            request.getDescription(false)
+            ex.getMessage()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(CartItemNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleCartItemNotFoundException(CartItemNotFoundException ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleCartItemNotFoundException(CartItemNotFoundException ex, WebRequest request) {
         logger.warn(CartServiceConstants.LOG_CART_ITEM_NOT_FOUND, ex.getMessage());
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.NOT_FOUND.value(),
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            404,
             CartServiceConstants.CART_ITEM_NOT_FOUND_TITLE,
-            ex.getMessage(),
-            LocalDateTime.now(),
-            request.getDescription(false)
+            ex.getMessage()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(ProductNotAvailableException.class)
-    public ResponseEntity<ErrorResponse> handleProductNotAvailableException(ProductNotAvailableException ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleProductNotAvailableException(ProductNotAvailableException ex, WebRequest request) {
         logger.warn(CartServiceConstants.LOG_PRODUCT_NOT_AVAILABLE, ex.getMessage());
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.BAD_REQUEST.value(),
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            400,
             CartServiceConstants.PRODUCT_NOT_AVAILABLE_TITLE,
-            ex.getMessage(),
-            LocalDateTime.now(),
-            request.getDescription(false)
+            ex.getMessage()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ValidationErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
         logger.warn(CartServiceConstants.LOG_VALIDATION_ERROR, ex.getMessage());
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach(error -> {
@@ -69,26 +64,30 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
 
-        ValidationErrorResponse errorResponse = new ValidationErrorResponse(
-            HttpStatus.BAD_REQUEST.value(),
+        // Convert validation errors to a single message
+        StringBuilder errorMessage = new StringBuilder();
+        errors.forEach((field, message) -> {
+            if (errorMessage.length() > 0) {
+                errorMessage.append(", ");
+            }
+            errorMessage.append(field).append(": ").append(message);
+        });
+
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            400,
             CartServiceConstants.VALIDATION_FAILED_TITLE,
-            CartServiceConstants.VALIDATION_FAILED_MESSAGE,
-            LocalDateTime.now(),
-            request.getDescription(false),
-            errors
+            errorMessage.toString()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleGenericException(Exception ex, WebRequest request) {
         logger.error(CartServiceConstants.LOG_UNEXPECTED_ERROR_OCCURRED, ex);
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            500,
             CartServiceConstants.INTERNAL_SERVER_ERROR_TITLE,
-            CartServiceConstants.UNEXPECTED_ERROR_MESSAGE,
-            LocalDateTime.now(),
-            request.getDescription(false)
+            CartServiceConstants.UNEXPECTED_ERROR_MESSAGE
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }

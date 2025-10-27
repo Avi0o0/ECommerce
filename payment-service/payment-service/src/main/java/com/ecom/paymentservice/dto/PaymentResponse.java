@@ -1,5 +1,6 @@
 package com.ecom.paymentservice.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class PaymentResponse {
@@ -7,16 +8,20 @@ public class PaymentResponse {
     private Long id;
     private Long orderId;
     private Long userId;
-    private java.math.BigDecimal amount;
+    private BigDecimal amount;
     private String paymentMethod;
     private String paymentStatus;
     private String transactionId;
+    private String currency;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     
     // Constructors
     public PaymentResponse() {}
     
-    public PaymentResponse(Long id, Long orderId, Long userId, java.math.BigDecimal amount, String paymentMethod, String paymentStatus, String transactionId, LocalDateTime createdAt) {
+    public PaymentResponse(Long id, Long orderId, Long userId, BigDecimal amount, String paymentMethod,
+                          String paymentStatus, String transactionId, String currency, 
+                          LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.orderId = orderId;
         this.userId = userId;
@@ -24,7 +29,9 @@ public class PaymentResponse {
         this.paymentMethod = paymentMethod;
         this.paymentStatus = paymentStatus;
         this.transactionId = transactionId;
+        this.currency = currency;
         this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
     
     // Getters and Setters
@@ -52,11 +59,11 @@ public class PaymentResponse {
         this.userId = userId;
     }
     
-    public java.math.BigDecimal getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
     
-    public void setAmount(java.math.BigDecimal amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
     
@@ -84,11 +91,43 @@ public class PaymentResponse {
         this.transactionId = transactionId;
     }
     
+    public String getCurrency() {
+        return currency;
+    }
+    
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+    
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+    
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+    
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+    
+    @Override
+    public String toString() {
+        return "PaymentResponse{" +
+                "id=" + id +
+                ", orderId=" + orderId +
+                ", userId=" + userId +
+                ", amount=" + amount +
+                ", paymentMethod='" + paymentMethod + '\'' +
+                ", paymentStatus='" + paymentStatus + '\'' +
+                ", transactionId='" + transactionId + '\'' +
+                ", currency='" + currency + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
     }
 }

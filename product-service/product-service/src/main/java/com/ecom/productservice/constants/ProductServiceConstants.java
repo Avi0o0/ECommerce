@@ -21,6 +21,7 @@ public final class ProductServiceConstants {
     // Authentication Messages
     public static final String AUTHORIZATION_HEADER_REQUIRED_MESSAGE = "Authorization header required";
     public static final String ADMIN_ACCESS_REQUIRED_MESSAGE = "Admin access required";
+    public static final String USER_ROLE_REQUIRED_MESSAGE = "USER role required";
     
     // Success Messages
     public static final String PRODUCT_DELETED_SUCCESS_MESSAGE = "Product deleted successfully";
@@ -33,8 +34,11 @@ public final class ProductServiceConstants {
     public static final String INTERNAL_SERVER_ERROR_TITLE = "Internal Server Error";
     
     // Error Messages
+    public static final String PRODUCT_NOT_FOUND_MESSAGE = "Product Not Found";
+    public static final String VALIDATION_ERROR_MESSAGE = "Validation Failed";
     public static final String VALIDATION_FAILED_MESSAGE = "Request validation failed";
     public static final String UNEXPECTED_ERROR_MESSAGE = "An unexpected error occurred";
+    public static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal Server Error";
     
     // ==================== LOG MESSAGES ====================
     
@@ -69,6 +73,7 @@ public final class ProductServiceConstants {
     // Authentication Log Messages
     public static final String LOG_NO_AUTHORIZATION_HEADER = "No authorization header provided";
     public static final String LOG_ACCESS_DENIED_NOT_ADMIN = "Access denied - user is not admin";
+    public static final String LOG_ACCESS_DENIED_USER_NO_USER_ROLE = "Access denied - user does not have USER role";
     public static final String LOG_VALIDATING_TOKEN_WITH_USER_SERVICE = "Validating token with User Service";
     public static final String LOG_TOKEN_VALIDATION_RESPONSE = "Token validation response: valid={}, username={}, roles={}";
     public static final String LOG_ERROR_VALIDATING_TOKEN = "Error validating token: {}";
@@ -77,12 +82,14 @@ public final class ProductServiceConstants {
     public static final String LOG_PRODUCT_NOT_FOUND = "Product not found: {}";
     public static final String LOG_VALIDATION_ERROR = "Validation error: {}";
     public static final String LOG_UNEXPECTED_ERROR_OCCURRED = "Unexpected error occurred";
+    public static final String LOG_UNEXPECTED_ERROR = "Unexpected error occurred: {}";
     
     // ==================== STRING VALUES ====================
     
     // Authentication
     public static final String BEARER_PREFIX = "Bearer ";
     public static final String ROLE_ADMIN = "ROLE_ADMIN";
+    public static final String ROLE_USER = "ROLE_USER";
     
     // ==================== NUMERIC VALUES ====================
     

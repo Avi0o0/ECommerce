@@ -11,6 +11,7 @@ public class Order {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "order_id", nullable = false)
     private Long id;
     
     @Column(name = "user_id", nullable = false)
@@ -20,14 +21,14 @@ public class Order {
     private BigDecimal totalAmount;
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private OrderStatus status;
+    @Column(name = "order_status", nullable = false)
+    private OrderStatus orderStatus;
+    
+    @Column(name = "payment_status", nullable = false)
+    private String paymentStatus;
     
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-    
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
     
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderItem> orderItems;
@@ -35,8 +36,8 @@ public class Order {
     // Constructors
     public Order() {
         this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-        this.status = OrderStatus.PENDING;
+        this.orderStatus = OrderStatus.PENDING;
+        this.paymentStatus = "PENDING";
     }
     
     public Order(Long userId, BigDecimal totalAmount) {
@@ -70,13 +71,20 @@ public class Order {
         this.totalAmount = totalAmount;
     }
     
-    public OrderStatus getStatus() {
-        return status;
+    public OrderStatus getOrderStatus() {
+        return orderStatus;
     }
     
-    public void setStatus(OrderStatus status) {
-        this.status = status;
-        this.updatedAt = LocalDateTime.now();
+    public void setOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+    
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
+    
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
     }
     
     public LocalDateTime getCreatedAt() {
@@ -87,14 +95,6 @@ public class Order {
         this.createdAt = createdAt;
     }
     
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-    
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-    
     public List<OrderItem> getOrderItems() {
         return orderItems;
     }
@@ -103,21 +103,15 @@ public class Order {
         this.orderItems = orderItems;
     }
     
-    // Utility methods
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-    
     @Override
     public String toString() {
         return "Order{" +
                 "id=" + id +
                 ", userId=" + userId +
                 ", totalAmount=" + totalAmount +
-                ", status=" + status +
+                ", orderStatus=" + orderStatus +
+                ", paymentStatus='" + paymentStatus + '\'' +
                 ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
                 '}';
     }
 }

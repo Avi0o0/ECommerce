@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecom.productservice.constants.ProductServiceConstants;
+import com.ecom.productservice.dto.OrderResponse;
 import com.ecom.productservice.dto.ProductRequest;
 import com.ecom.productservice.dto.ProductResponse;
 import com.ecom.productservice.dto.SuccessResponse;
+import com.ecom.productservice.dto.GlobalErrorResponse;
 import com.ecom.productservice.service.AuthenticationService;
 import com.ecom.productservice.service.ProductService;
 
@@ -40,7 +42,13 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductResponse>> getAllProducts() {
+    public ResponseEntity<List<ProductResponse>> getAllProducts(
+            @RequestParam(value = "search", required = false) String keyword) {
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            logger.info("Search request with keyword: {}", keyword);
+            List<ProductResponse> products = productService.searchProducts(keyword);
+            return ResponseEntity.ok(products);
+        }
         logger.info(ProductServiceConstants.LOG_GET_ALL_PRODUCTS_REQUEST);
         List<ProductResponse> products = productService.getAllProducts();
         return ResponseEntity.ok(products);
@@ -53,21 +61,54 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
+    @PostMapping("/{productId}/buy-now")
+    public ResponseEntity<Object> buyNow(@PathVariable Long productId,
+                                   @RequestParam Long userId,
+                                   @RequestParam Integer quantity,
+                                   @RequestParam String paymentMethod,
+                                   @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        logger.info("POST /products/{}/buy-now - User: {}, Quantity: {}, Payment: {}", productId, userId, quantity, paymentMethod);
+        
+        if (authHeader == null) {
+            logger.warn(ProductServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new GlobalErrorResponse(HttpStatus.UNAUTHORIZED.value(), ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE, ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
+        }
+        
+        // Check if user is authenticated and has USER role
+        if (!authenticationService.isUser(authHeader)) {
+            logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_USER_NO_USER_ROLE);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(), ProductServiceConstants.USER_ROLE_REQUIRED_MESSAGE, ProductServiceConstants.USER_ROLE_REQUIRED_MESSAGE));
+        }
+        
+        // Check if user is buying for themselves
+        Long tokenUserId = authenticationService.getUserId(authHeader);
+        if (tokenUserId == null || !userId.equals(tokenUserId)) {
+            logger.warn("User {} cannot buy for user {}", tokenUserId, userId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(), "You can only buy products for yourself", "You can only buy products for yourself"));
+        }
+        
+        OrderResponse order = productService.buyNow(userId, productId, quantity, paymentMethod, authHeader);
+        return ResponseEntity.status(HttpStatus.CREATED).body(order);
+    }
+
     @PostMapping
-    public ResponseEntity<?> createProduct(@Valid @RequestBody ProductRequest request,
+    public ResponseEntity<Object> createProduct(@Valid @RequestBody ProductRequest request,
                                           @RequestHeader(value = "Authorization", required = false) String authHeader) {
         logger.info(ProductServiceConstants.LOG_POST_CREATE_PRODUCT_REQUEST, request.getName());
         
         if (authHeader == null) {
             logger.warn(ProductServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.UNAUTHORIZED.value(), ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE, ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
         }
         
         if (!authenticationService.isAdmin(authHeader)) {
             logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(), ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE, ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE));
         }
         
         ProductResponse product = productService.createProduct(request);
@@ -75,20 +116,20 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest request,
+    public ResponseEntity<Object> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest request,
                                           @RequestHeader(value = "Authorization", required = false) String authHeader) {
         logger.info(ProductServiceConstants.LOG_PUT_UPDATE_PRODUCT_REQUEST, id);
         
         if (authHeader == null) {
             logger.warn(ProductServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.UNAUTHORIZED.value(), ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE, ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
         }
         
         if (!authenticationService.isAdmin(authHeader)) {
             logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(), ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE, ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE));
         }
         
         ProductResponse product = productService.updateProduct(id, request);
@@ -96,20 +137,20 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteProduct(@PathVariable Long id,
+    public ResponseEntity<Object> deleteProduct(@PathVariable Long id,
                                           @RequestHeader(value = "Authorization", required = false) String authHeader) {
         logger.info(ProductServiceConstants.LOG_DELETE_PRODUCT_REQUEST, id);
         
         if (authHeader == null) {
             logger.warn(ProductServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.UNAUTHORIZED.value(), ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE, ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
         }
         
         if (!authenticationService.isAdmin(authHeader)) {
             logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(), ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE, ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE));
         }
         
         productService.deleteProduct(id);
@@ -125,7 +166,7 @@ public class ProductController {
     }
 
     @PutMapping("/{sku}/stock/add")
-    public ResponseEntity<?> addStock(@PathVariable String sku,
+    public ResponseEntity<Object> addStock(@PathVariable String sku,
                                     @RequestParam Integer quantity,
                                     @RequestHeader(value = "Authorization", required = false) String authHeader) {
         logger.info(ProductServiceConstants.LOG_PUT_ADD_STOCK_REQUEST, sku, quantity);
@@ -133,13 +174,13 @@ public class ProductController {
         if (authHeader == null) {
             logger.warn(ProductServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.UNAUTHORIZED.value(), ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE, ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
         }
         
         if (!authenticationService.isAdmin(authHeader)) {
             logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(), ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE, ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE));
         }
         
         ProductResponse product = productService.addStock(sku, quantity);
@@ -147,7 +188,7 @@ public class ProductController {
     }
 
     @PutMapping("/{sku}/stock/reduce")
-    public ResponseEntity<?> reduceStock(@PathVariable String sku,
+    public ResponseEntity<Object> reduceStock(@PathVariable String sku,
                                        @RequestParam Integer quantity,
                                        @RequestHeader(value = "Authorization", required = false) String authHeader) {
         logger.info(ProductServiceConstants.LOG_PUT_REDUCE_STOCK_REQUEST, sku, quantity);
@@ -155,16 +196,23 @@ public class ProductController {
         if (authHeader == null) {
             logger.warn(ProductServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.UNAUTHORIZED.value(), ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE, ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
         }
         
         if (!authenticationService.isAdmin(authHeader)) {
             logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(), ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE, ProductServiceConstants.ADMIN_ACCESS_REQUIRED_MESSAGE));
         }
         
         ProductResponse product = productService.reduceStock(sku, quantity);
         return ResponseEntity.ok(product);
+    }
+
+    @PutMapping("/reduce-stock")
+    public ResponseEntity<Object> reduceStockByProductId(@RequestParam Long productId, @RequestParam Integer quantity) {
+        logger.info("Reducing stock for product ID: {} by quantity: {}", productId, quantity);
+        productService.reduceStockByProductId(productId, quantity);
+        return ResponseEntity.ok().build();
     }
 }

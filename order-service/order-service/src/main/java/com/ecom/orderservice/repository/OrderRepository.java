@@ -27,14 +27,24 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
     
     /**
-     * Find orders by status
+     * Find orders by order status
      */
-    List<Order> findByStatusOrderByCreatedAtDesc(OrderStatus status);
+    List<Order> findByOrderStatusOrderByCreatedAtDesc(OrderStatus orderStatus);
     
     /**
-     * Find orders by user ID and status
+     * Find orders by payment status
      */
-    List<Order> findByUserIdAndStatusOrderByCreatedAtDesc(Long userId, OrderStatus status);
+    List<Order> findByPaymentStatusOrderByCreatedAtDesc(String paymentStatus);
+    
+    /**
+     * Find orders by user ID and order status
+     */
+    List<Order> findByUserIdAndOrderStatusOrderByCreatedAtDesc(Long userId, OrderStatus orderStatus);
+    
+    /**
+     * Find orders by user ID and payment status
+     */
+    List<Order> findByUserIdAndPaymentStatusOrderByCreatedAtDesc(Long userId, String paymentStatus);
     
     /**
      * Find orders created between two dates
@@ -57,14 +67,19 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     long countByUserId(Long userId);
     
     /**
-     * Count orders by status
+     * Count orders by order status
      */
-    long countByStatus(OrderStatus status);
+    long countByOrderStatus(OrderStatus orderStatus);
+    
+    /**
+     * Count orders by payment status
+     */
+    long countByPaymentStatus(String paymentStatus);
     
     /**
      * Find pending orders older than specified time
      */
-    @Query("SELECT o FROM Order o WHERE o.status = 'PENDING' AND o.createdAt < :cutoffTime")
+    @Query("SELECT o FROM Order o WHERE o.orderStatus = 'PENDING' AND o.createdAt < :cutoffTime")
     List<Order> findPendingOrdersOlderThan(@Param("cutoffTime") LocalDateTime cutoffTime);
     
     /**

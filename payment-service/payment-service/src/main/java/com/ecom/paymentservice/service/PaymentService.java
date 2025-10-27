@@ -3,13 +3,15 @@ package com.ecom.paymentservice.service;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ecom.paymentservice.client.NotificationClient;
+import com.ecom.paymentservice.constants.PaymentServiceConstants;
+import com.ecom.paymentservice.dto.NotificationRequest;
 import com.ecom.paymentservice.dto.PaymentRequest;
 import com.ecom.paymentservice.dto.PaymentResponse;
 import com.ecom.paymentservice.entity.Payment;
@@ -23,19 +25,17 @@ public class PaymentService {
     
     private static final Logger logger = LoggerFactory.getLogger(PaymentService.class);
     private final Random random = new Random();
-    private static final String PAYMENT_NOT_FOUND_MESSAGE = "Payment not found with ID: ";
 
     private final PaymentRepository paymentRepository;
+    private final NotificationClient notificationClient;
     
-    public PaymentService(PaymentRepository paymentRepository) {
+    public PaymentService(PaymentRepository paymentRepository, NotificationClient notificationClient) {
         this.paymentRepository = paymentRepository;
+        this.notificationClient = notificationClient;
     }
     
-    /**
-     * Process payment for an order
-     */
     public PaymentResponse processPayment(PaymentRequest paymentRequest) {
-        logger.info("Processing payment for order: {} by user: {}", paymentRequest.getOrderId(), paymentRequest.getUserId());
+        logger.info(PaymentServiceConstants.LOG_PROCESSING_PAYMENT, paymentRequest.getOrderId(), paymentRequest.getUserId());
         
         Payment payment = new Payment(
             paymentRequest.getOrderId(),
@@ -51,52 +51,47 @@ public class PaymentService {
         payment.setPaymentStatus(PaymentStatus.valueOf(paymentStatus));
         
         Payment savedPayment = paymentRepository.save(payment);
-        logger.info("Payment processed successfully with ID: {} and status: {}", savedPayment.getId(), paymentStatus);
+        logger.info(PaymentServiceConstants.LOG_PAYMENT_PROCESSED_SUCCESSFULLY, savedPayment.getId(), paymentStatus);
         
+        generateNotification(savedPayment);
         return convertToResponse(savedPayment);
     }
-    
-    /**
-     * Get payment by ID
-     */
-    @Transactional(readOnly = true)
+
+    private void generateNotification(Payment savedPayment) {
+    	NotificationRequest notificationRequest = new NotificationRequest();
+    	notificationRequest.setType(savedPayment.getPaymentMethod());
+    	notificationRequest.setUserId(savedPayment.getUserId());
+    	notificationRequest.setMessage("This is notification regarding the transection " + savedPayment.getTransactionId() + ", your payment of Rs." + savedPayment.getAmount() + " using your " + savedPayment.getPaymentMethod() + " is " + savedPayment.getPaymentStatus());
+		notificationClient.sendNotification(notificationRequest);
+	}
+
+	@Transactional(readOnly = true)
     public PaymentResponse getPaymentById(Long paymentId) {
-        logger.info("Getting payment by ID: {}", paymentId);
+        logger.info(PaymentServiceConstants.LOG_GETTING_PAYMENT_BY_ID, paymentId);
         Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new PaymentNotFoundException(PAYMENT_NOT_FOUND_MESSAGE + paymentId));
+                .orElseThrow(() -> new PaymentNotFoundException(PaymentServiceConstants.PAYMENT_NOT_FOUND_MESSAGE + paymentId));
         return convertToResponse(payment);
     }
     
-    /**
-     * Get payments by user ID
-     */
     @Transactional(readOnly = true)
     public List<PaymentResponse> getPaymentsByUserId(Long userId) {
-        logger.info("Getting payments for user: {}", userId);
+        logger.info(PaymentServiceConstants.LOG_GETTING_PAYMENTS_FOR_USER, userId);
         List<Payment> payments = paymentRepository.findByUserIdOrderByCreatedAtDesc(userId);
         return payments.stream()
                 .map(this::convertToResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
     
-    /**
-     * Generate unique transaction ID
-     */
     private String generateTransactionId() {
-        return "TXN-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
+        return PaymentServiceConstants.TRANSACTION_ID_PREFIX + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
     }
-    
-    /**
-     * Simulate payment processing
-     */
+ 
     private String simulatePaymentProcessing() {
-        // 80% success rate for simulation
-        return random.nextDouble() < 0.8 ? "SUCCESS" : "FAILED";
+        return random.nextDouble() < PaymentServiceConstants.PAYMENT_SUCCESS_RATE ? 
+            PaymentServiceConstants.PAYMENT_STATUS_SUCCESS : 
+            PaymentServiceConstants.PAYMENT_STATUS_FAILED;
     }
     
-    /**
-     * Convert Payment entity to PaymentResponse DTO
-     */
     private PaymentResponse convertToResponse(Payment payment) {
         return new PaymentResponse(
             payment.getId(),
@@ -106,7 +101,9 @@ public class PaymentService {
             payment.getPaymentMethod(),
             payment.getPaymentStatus().toString(),
             payment.getTransactionId(),
-            payment.getCreatedAt()
+            PaymentServiceConstants.DEFAULT_CURRENCY,
+            payment.getCreatedAt(),
+            payment.getUpdatedAt()
         );
     }
 }

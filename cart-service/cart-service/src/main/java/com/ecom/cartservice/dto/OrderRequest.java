@@ -3,6 +3,8 @@ package com.ecom.cartservice.dto;
 import java.math.BigDecimal;
 import java.util.List;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
@@ -11,15 +13,24 @@ public class OrderRequest {
     @NotNull(message = "User ID is required")
     private Long userId;
     
+    @NotNull(message = "Total amount is required")
+    @DecimalMin(value = "0.01", message = "Total amount must be greater than 0")
+    private BigDecimal totalAmount;
+    
+    @NotBlank(message = "Payment method is required")
+    private String paymentMethod;
+    
     @NotEmpty(message = "Order items cannot be empty")
-    private List<OrderItemRequest> items;
+    private List<OrderItemRequest> orderItems;
     
     // Constructors
     public OrderRequest() {}
     
-    public OrderRequest(Long userId, List<OrderItemRequest> items) {
+    public OrderRequest(Long userId, BigDecimal totalAmount, String paymentMethod, List<OrderItemRequest> orderItems) {
         this.userId = userId;
-        this.items = items;
+        this.totalAmount = totalAmount;
+        this.paymentMethod = paymentMethod;
+        this.orderItems = orderItems;
     }
     
     // Getters and Setters
@@ -31,57 +42,37 @@ public class OrderRequest {
         this.userId = userId;
     }
     
-    public List<OrderItemRequest> getItems() {
-        return items;
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
     }
     
-    public void setItems(List<OrderItemRequest> items) {
-        this.items = items;
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
     }
     
-    // Inner class for order items
-    public static class OrderItemRequest {
-        @NotNull(message = "Product ID is required")
-        private Long productId;
-        
-        @NotNull(message = "Quantity is required")
-        private Integer quantity;
-        
-        @NotNull(message = "Price is required")
-        private BigDecimal price;
-        
-        // Constructors
-        public OrderItemRequest() {}
-        
-        public OrderItemRequest(Long productId, Integer quantity, BigDecimal price) {
-            this.productId = productId;
-            this.quantity = quantity;
-            this.price = price;
-        }
-        
-        // Getters and Setters
-        public Long getProductId() {
-            return productId;
-        }
-        
-        public void setProductId(Long productId) {
-            this.productId = productId;
-        }
-        
-        public Integer getQuantity() {
-            return quantity;
-        }
-        
-        public void setQuantity(Integer quantity) {
-            this.quantity = quantity;
-        }
-        
-        public BigDecimal getPrice() {
-            return price;
-        }
-        
-        public void setPrice(BigDecimal price) {
-            this.price = price;
-        }
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+    
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+    
+    public List<OrderItemRequest> getOrderItems() {
+        return orderItems;
+    }
+    
+    public void setOrderItems(List<OrderItemRequest> orderItems) {
+        this.orderItems = orderItems;
+    }
+    
+    @Override
+    public String toString() {
+        return "OrderRequest{" +
+                "userId=" + userId +
+                ", totalAmount=" + totalAmount +
+                ", paymentMethod='" + paymentMethod + '\'' +
+                ", orderItems=" + orderItems +
+                '}';
     }
 }

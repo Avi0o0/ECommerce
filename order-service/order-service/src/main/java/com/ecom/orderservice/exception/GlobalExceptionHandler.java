@@ -9,9 +9,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import com.ecom.orderservice.constants.OrderServiceConstants;
+import com.ecom.orderservice.dto.GlobalErrorResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -19,54 +18,48 @@ public class GlobalExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     
     @ExceptionHandler(OrderNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleOrderNotFoundException(OrderNotFoundException ex, WebRequest request) {
-        logger.error("Order not found: {}", ex.getMessage());
-        
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.NOT_FOUND.value(),
-            "Order Not Found",
+    public ResponseEntity<GlobalErrorResponse> handleOrderNotFoundException(OrderNotFoundException ex, WebRequest request) {
+        logger.error(OrderServiceConstants.LOG_ORDER_NOT_FOUND, ex.getMessage());
+
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            404,
             ex.getMessage(),
-            LocalDateTime.now(),
-            request.getDescription(false)
+            ex.getMessage()
         );
-        
+
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
     
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ValidationErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        logger.error("Validation error: {}", ex.getMessage());
+    public ResponseEntity<GlobalErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        logger.error(OrderServiceConstants.LOG_VALIDATION_ERROR, ex.getMessage());
         
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
+        StringBuilder errorMessage = new StringBuilder(OrderServiceConstants.VALIDATION_FAILED_MESSAGE + ": ");
+        ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((org.springframework.validation.FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
+            String errorMsg = error.getDefaultMessage();
+            errorMessage.append(fieldName).append(" - ").append(errorMsg).append("; ");
         });
-        
-        ValidationErrorResponse errorResponse = new ValidationErrorResponse(
-            HttpStatus.BAD_REQUEST.value(),
-            "Validation Failed",
-            "Request validation failed",
-            LocalDateTime.now(),
-            errors
+
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            400,
+            OrderServiceConstants.VALIDATION_FAILED_MESSAGE,
+            errorMessage.toString()
         );
-        
+
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
     
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, WebRequest request) {
-        logger.error("Unexpected error occurred: {}", ex.getMessage(), ex);
-        
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.INTERNAL_SERVER_ERROR.value(),
-            "Internal Server Error",
-            "An unexpected error occurred",
-            LocalDateTime.now(),
-            request.getDescription(false)
+    public ResponseEntity<GlobalErrorResponse> handleGenericException(Exception ex, WebRequest request) {
+        logger.error(OrderServiceConstants.LOG_UNEXPECTED_ERROR_OCCURRED, ex.getMessage(), ex);
+
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            500,
+            OrderServiceConstants.UNEXPECTED_ERROR_MESSAGE,
+            ex.getMessage()
         );
-        
+
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

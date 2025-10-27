@@ -3,13 +3,15 @@ package com.ecom.cartservice.client;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import com.ecom.cartservice.dto.OrderRequest;
 import com.ecom.cartservice.dto.OrderResponse;
 
-@FeignClient(name = "ORDER-SERVICE")
+@FeignClient(name = "order-service")
 public interface OrderServiceClient {
     
-    @PostMapping("/orders/create")
-    OrderResponse createOrder(@RequestBody OrderRequest orderRequest);
+    @PostMapping("/orders/checkout")
+    OrderResponse checkout(@RequestBody OrderRequest orderRequest, 
+                          @RequestHeader("Authorization") String authorization);
 }

@@ -16,11 +16,9 @@ import reactor.core.publisher.Mono;
 
 import com.ecom.apigateway.dto.TokenRequest;
 import com.ecom.apigateway.dto.TokenValidationResponse;
+import com.ecom.apigateway.dto.GlobalErrorResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-/**
- * Authentication filter for protected service routes
- * Validates JWT tokens with User Service before forwarding requests
- */
 @Component
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
 
@@ -60,7 +58,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             // Validate token with User Service
             return validateToken(token)
                     .flatMap(isValid -> {
-                        if (isValid) {
+                        if (Boolean.TRUE.equals(isValid)) {
                             logger.debug("Token validation successful for request to: {}", path);
                             return chain.filter(exchange);
                         } else {
@@ -99,10 +97,22 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
         response.setStatusCode(HttpStatus.UNAUTHORIZED);
         response.getHeaders().add(HttpHeaders.CONTENT_TYPE, "application/json");
         
-        String body = String.format("{\"status\":401,\"message\":\"%s\",\"timestamp\":\"%s\"}", 
-                message, java.time.LocalDateTime.now());
-        
-        return response.writeWith(Mono.just(response.bufferFactory().wrap(body.getBytes())));
+        try {
+            GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+                401,
+                message,
+                message
+            );
+            
+            ObjectMapper mapper = new ObjectMapper();
+            String body = mapper.writeValueAsString(errorResponse);
+            
+            return response.writeWith(Mono.just(response.bufferFactory().wrap(body.getBytes())));
+        } catch (Exception e) {
+            logger.error("Error creating error response: {}", e.getMessage());
+            String fallbackBody = "{\"status\":401,\"message\":\"" + message + "\",\"desc\":\"" + message + "\"}";
+            return response.writeWith(Mono.just(response.bufferFactory().wrap(fallbackBody.getBytes())));
+        }
     }
 
     public static class Config {

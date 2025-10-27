@@ -2,25 +2,29 @@ package com.ecom.orderservice.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
+
+import com.ecom.orderservice.entity.OrderStatus;
 
 public class OrderResponse {
     
     private Long id;
     private Long userId;
     private BigDecimal totalAmount;
+    private OrderStatus orderStatus;
+    private String paymentStatus;
     private LocalDateTime createdAt;
-    private List<OrderItemResponse> orderItems;
     
     // Constructors
     public OrderResponse() {}
     
-    public OrderResponse(Long id, Long userId, BigDecimal totalAmount, LocalDateTime createdAt, List<OrderItemResponse> orderItems) {
+    public OrderResponse(Long id, Long userId, BigDecimal totalAmount, OrderStatus orderStatus, 
+                        String paymentStatus, LocalDateTime createdAt) {
         this.id = id;
         this.userId = userId;
         this.totalAmount = totalAmount;
+        this.orderStatus = orderStatus;
+        this.paymentStatus = paymentStatus;
         this.createdAt = createdAt;
-        this.orderItems = orderItems;
     }
     
     // Getters and Setters
@@ -48,6 +52,22 @@ public class OrderResponse {
         this.totalAmount = totalAmount;
     }
     
+    public OrderStatus getOrderStatus() {
+        return orderStatus;
+    }
+    
+    public void setOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+    
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
+    
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+    
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -56,11 +76,4 @@ public class OrderResponse {
         this.createdAt = createdAt;
     }
     
-    public List<OrderItemResponse> getOrderItems() {
-        return orderItems;
-    }
-    
-    public void setOrderItems(List<OrderItemResponse> orderItems) {
-        this.orderItems = orderItems;
-    }
 }

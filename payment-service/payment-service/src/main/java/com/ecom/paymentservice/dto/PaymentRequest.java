@@ -5,13 +5,16 @@ import java.math.BigDecimal;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 public class PaymentRequest {
     
     @NotNull(message = "Order ID is required")
+    @Positive(message = "Order ID must be positive")
     private Long orderId;
     
     @NotNull(message = "User ID is required")
+    @Positive(message = "User ID must be positive")
     private Long userId;
     
     @NotNull(message = "Amount is required")
@@ -62,5 +65,15 @@ public class PaymentRequest {
     
     public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+    
+    @Override
+    public String toString() {
+        return "PaymentRequest{" +
+                "orderId=" + orderId +
+                ", userId=" + userId +
+                ", amount=" + amount +
+                ", paymentMethod='" + paymentMethod + '\'' +
+                '}';
     }
 }

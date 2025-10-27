@@ -1,5 +1,6 @@
 package com.ecom.productservice.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,11 +10,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ecom.productservice.constants.ProductServiceConstants;
+import com.ecom.productservice.dto.OrderItemRequest;
+import com.ecom.productservice.dto.OrderRequest;
+import com.ecom.productservice.dto.OrderResponse;
 import com.ecom.productservice.dto.ProductRequest;
 import com.ecom.productservice.dto.ProductResponse;
 import com.ecom.productservice.entity.Product;
 import com.ecom.productservice.exception.ProductNotFoundException;
 import com.ecom.productservice.repository.ProductRepository;
+import com.ecom.productservice.client.OrderServiceClient;
 
 @Service
 @Transactional
@@ -22,9 +27,11 @@ public class ProductService {
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
     private final ProductRepository productRepository;
+    private final OrderServiceClient orderServiceClient;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, OrderServiceClient orderServiceClient) {
         this.productRepository = productRepository;
+        this.orderServiceClient = orderServiceClient;
     }
 
     /**
@@ -171,6 +178,80 @@ public class ProductService {
         Product product = productRepository.findByStockKeepingUnit(sku)
                 .orElseThrow(() -> new ProductNotFoundException(ProductServiceConstants.PRODUCT_NOT_FOUND_BY_SKU_MESSAGE + sku));
         return convertToResponse(product);
+    }
+
+    /**
+     * Search products by keyword in name or description
+     */
+    @Transactional(readOnly = true)
+    public List<ProductResponse> searchProducts(String keyword) {
+        logger.info("Searching products with keyword: {}", keyword);
+        List<Product> products = productRepository.searchProducts(keyword);
+        logger.info("Found {} products matching keyword '{}'", products.size(), keyword);
+        return products.stream()
+                .map(this::convertToResponse)
+                .toList();
+    }
+
+    /**
+     * Reduce stock by product ID (for internal service calls)
+     */
+    public void reduceStockByProductId(Long productId, Integer quantity) {
+        logger.info("Reducing stock for product ID: {} by quantity: {}", productId, quantity);
+        
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ProductServiceConstants.PRODUCT_NOT_FOUND_BY_ID_MESSAGE + productId));
+        
+        if (product.getStockQuantity() < quantity) {
+            throw new IllegalArgumentException(String.format(ProductServiceConstants.INSUFFICIENT_STOCK_MESSAGE, 
+                product.getStockQuantity(), quantity));
+        }
+        
+        int newQuantity = product.getStockQuantity() - quantity;
+        product.setStockQuantity(newQuantity);
+        
+        productRepository.save(product);
+        logger.info("Stock reduced successfully for product ID: {}, new quantity: {}", productId, newQuantity);
+    }
+
+    /**
+     * Buy now - purchase product directly
+     */
+    public OrderResponse buyNow(Long userId, Long productId, Integer quantity, String paymentMethod, String authorization) {
+        logger.info("Processing buy now for user: {}, product: {}, quantity: {}", userId, productId, quantity);
+        
+        // Get product details and check availability
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ProductServiceConstants.PRODUCT_NOT_FOUND_BY_ID_MESSAGE + productId));
+        
+        // Check if product has sufficient stock
+        if (product.getStockQuantity() < quantity) {
+            throw new IllegalArgumentException(String.format(ProductServiceConstants.INSUFFICIENT_STOCK_MESSAGE, 
+                product.getStockQuantity(), quantity));
+        }
+        
+        // Calculate total amount
+        BigDecimal totalAmount = product.getPrice().multiply(BigDecimal.valueOf(quantity));
+        
+        // Prepare order request
+        OrderItemRequest orderItem = new OrderItemRequest(
+            productId, quantity, product.getPrice()
+        );
+        
+        OrderRequest orderRequest = new OrderRequest(
+            userId, totalAmount, paymentMethod, List.of(orderItem)
+        );
+        
+        // Call Order Service to checkout with authorization header
+        OrderResponse orderResponse = orderServiceClient.checkout(orderRequest, authorization);
+        
+        // Reduce stock after successful order
+        if ("COMPLETED".equalsIgnoreCase(orderResponse.getOrderStatus())) {
+            reduceStock(product.getStockKeepingUnit(), quantity);
+        }
+        
+        logger.info("Buy now completed for user: {}, order: {}", userId, orderResponse.getId());
+        return orderResponse;
     }
 
     /**

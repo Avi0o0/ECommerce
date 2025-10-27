@@ -19,6 +19,7 @@ import com.ecom.cartservice.dto.AddToCartRequest;
 import com.ecom.cartservice.dto.CartResponse;
 import com.ecom.cartservice.dto.OrderResponse;
 import com.ecom.cartservice.dto.SuccessResponse;
+import com.ecom.cartservice.dto.GlobalErrorResponse;
 import com.ecom.cartservice.service.AuthenticationService;
 import com.ecom.cartservice.service.CartService;
 
@@ -38,14 +39,14 @@ public class CartController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getCart(@RequestParam Long userId, 
+    public ResponseEntity<Object> getCart(@RequestParam Long userId, 
                                    @RequestHeader(value = "Authorization", required = false) String authHeader) {
         logger.info(CartServiceConstants.LOG_GET_CART_REQUEST, userId);
         
         if (authHeader == null) {
             logger.warn(CartServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.UNAUTHORIZED.value(), CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE, CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
         }
         
         // Check if user is admin or the same user
@@ -63,7 +64,7 @@ public class CartController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> addToCart(@Valid @RequestBody AddToCartRequest request, 
+    public ResponseEntity<Object> addToCart(@Valid @RequestBody AddToCartRequest request, 
                                      @RequestParam Long userId,
                                      @RequestHeader(value = "Authorization", required = false) String authHeader) {
         logger.info(CartServiceConstants.LOG_POST_ADD_TO_CART_REQUEST, request.getProductId(), userId);
@@ -71,14 +72,14 @@ public class CartController {
         if (authHeader == null) {
             logger.warn(CartServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.UNAUTHORIZED.value(), CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE, CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
         }
         
         // Check if user is authenticated and has USER role
         if (!authenticationService.isUser(authHeader)) {
             logger.warn(CartServiceConstants.LOG_ACCESS_DENIED_USER_NO_USER_ROLE);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), CartServiceConstants.USER_ROLE_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(), CartServiceConstants.USER_ROLE_REQUIRED_MESSAGE, CartServiceConstants.USER_ROLE_REQUIRED_MESSAGE));
         }
         
         // Check if user is adding to their own cart
@@ -94,7 +95,7 @@ public class CartController {
     }
 
     @DeleteMapping("/remove/{productId}")
-    public ResponseEntity<?> removeFromCart(@PathVariable Long productId, 
+    public ResponseEntity<Object> removeFromCart(@PathVariable Long productId, 
                                          @RequestParam Long userId,
                                          @RequestHeader(value = "Authorization", required = false) String authHeader) {
         logger.info(CartServiceConstants.LOG_DELETE_REMOVE_FROM_CART_REQUEST, productId, userId);
@@ -102,14 +103,14 @@ public class CartController {
         if (authHeader == null) {
             logger.warn(CartServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.UNAUTHORIZED.value(), CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE, CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
         }
         
         // Check if user is authenticated and has USER role
         if (!authenticationService.isUser(authHeader)) {
             logger.warn(CartServiceConstants.LOG_ACCESS_DENIED_USER_NO_USER_ROLE);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), CartServiceConstants.USER_ROLE_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(), CartServiceConstants.USER_ROLE_REQUIRED_MESSAGE, CartServiceConstants.USER_ROLE_REQUIRED_MESSAGE));
         }
         
         // Check if user is removing from their own cart
@@ -117,7 +118,7 @@ public class CartController {
         if (tokenUserId == null || !userId.equals(tokenUserId)) {
             logger.warn(CartServiceConstants.LOG_ACCESS_DENIED_USER_CANNOT_REMOVE_FROM_CART, tokenUserId, userId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), CartServiceConstants.CAN_ONLY_REMOVE_FROM_OWN_CART_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(), CartServiceConstants.CAN_ONLY_REMOVE_FROM_OWN_CART_MESSAGE, CartServiceConstants.CAN_ONLY_REMOVE_FROM_OWN_CART_MESSAGE));
         }
         
         CartResponse cart = cartService.removeFromCart(userId, productId);
@@ -125,21 +126,21 @@ public class CartController {
     }
 
     @DeleteMapping("/clear")
-    public ResponseEntity<?> clearCart(@RequestParam Long userId,
+    public ResponseEntity<Object> clearCart(@RequestParam Long userId,
                                      @RequestHeader(value = "Authorization", required = false) String authHeader) {
         logger.info(CartServiceConstants.LOG_DELETE_CLEAR_CART_REQUEST, userId);
         
         if (authHeader == null) {
             logger.warn(CartServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.UNAUTHORIZED.value(), CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE, CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
         }
         
         // Check if user is authenticated and has USER role
         if (!authenticationService.isUser(authHeader)) {
             logger.warn(CartServiceConstants.LOG_ACCESS_DENIED_USER_NO_USER_ROLE);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), CartServiceConstants.USER_ROLE_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(), CartServiceConstants.USER_ROLE_REQUIRED_MESSAGE, CartServiceConstants.USER_ROLE_REQUIRED_MESSAGE));
         }
         
         // Check if user is clearing their own cart
@@ -147,7 +148,7 @@ public class CartController {
         if (tokenUserId == null || !userId.equals(tokenUserId)) {
             logger.warn(CartServiceConstants.LOG_ACCESS_DENIED_USER_CANNOT_CLEAR_CART, tokenUserId, userId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), CartServiceConstants.CAN_ONLY_CLEAR_OWN_CART_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(), CartServiceConstants.CAN_ONLY_CLEAR_OWN_CART_MESSAGE, CartServiceConstants.CAN_ONLY_CLEAR_OWN_CART_MESSAGE));
         }
         
         cartService.clearCart(userId);
@@ -156,21 +157,22 @@ public class CartController {
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<?> checkout(@RequestParam Long userId,
+    public ResponseEntity<Object> checkout(@RequestParam Long userId,
+                                    @RequestParam String paymentMethod,
                                     @RequestHeader(value = "Authorization", required = false) String authHeader) {
         logger.info(CartServiceConstants.LOG_POST_CHECKOUT_REQUEST, userId);
         
         if (authHeader == null) {
             logger.warn(CartServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new SuccessResponse(HttpStatus.UNAUTHORIZED.value(), CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.UNAUTHORIZED.value(), CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE, CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
         }
         
         // Check if user is authenticated and has USER role
         if (!authenticationService.isUser(authHeader)) {
             logger.warn(CartServiceConstants.LOG_ACCESS_DENIED_USER_NO_USER_ROLE);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), CartServiceConstants.USER_ROLE_REQUIRED_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(), CartServiceConstants.USER_ROLE_REQUIRED_MESSAGE, CartServiceConstants.USER_ROLE_REQUIRED_MESSAGE));
         }
         
         // Check if user is checking out their own cart
@@ -178,10 +180,10 @@ public class CartController {
         if (tokenUserId == null || !userId.equals(tokenUserId)) {
             logger.warn(CartServiceConstants.LOG_ACCESS_DENIED_USER_CANNOT_CHECKOUT_CART, tokenUserId, userId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), CartServiceConstants.CAN_ONLY_CHECKOUT_OWN_CART_MESSAGE));
+                    .body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(), CartServiceConstants.CAN_ONLY_CHECKOUT_OWN_CART_MESSAGE, CartServiceConstants.CAN_ONLY_CHECKOUT_OWN_CART_MESSAGE));
         }
         
-        OrderResponse order = cartService.checkout(userId);
+        OrderResponse order = cartService.checkout(userId, paymentMethod, authHeader);
         return ResponseEntity.status(HttpStatus.CREATED).body(order);
     }
 }

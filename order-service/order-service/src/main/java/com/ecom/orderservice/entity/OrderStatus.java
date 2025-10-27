@@ -2,6 +2,9 @@ package com.ecom.orderservice.entity;
 
 public enum OrderStatus {
     PENDING("Pending"),
+    COMPLETED("Completed"),
+    FAILED("Failed"),
+    INCOMPLETE("Incomplete"),
     PAID("Paid"),
     SHIPPED("Shipped"),
     DELIVERED("Delivered"),

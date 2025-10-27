@@ -14,6 +14,7 @@ import com.ecom.cartservice.client.ProductServiceClient;
 import com.ecom.cartservice.constants.CartServiceConstants;
 import com.ecom.cartservice.dto.AddToCartRequest;
 import com.ecom.cartservice.dto.CartResponse;
+import com.ecom.cartservice.dto.OrderItemRequest;
 import com.ecom.cartservice.dto.OrderRequest;
 import com.ecom.cartservice.dto.OrderResponse;
 import com.ecom.cartservice.dto.ProductDto;
@@ -171,7 +172,7 @@ public class CartService {
     /**
      * Checkout cart - create order
      */
-    public OrderResponse checkout(Long userId) {
+    public OrderResponse checkout(Long userId, String paymentMethod, String authorization) {
         logger.info(CartServiceConstants.LOG_PROCESSING_CHECKOUT_FOR_USER, userId);
         
         Cart cart = cartRepository.findByUserId(userId)
@@ -181,19 +182,24 @@ public class CartService {
             throw new CartNotFoundException(CartServiceConstants.CART_EMPTY_MESSAGE + userId);
         }
 
+        // Calculate total amount
+        BigDecimal totalAmount = cart.getCartItems().stream()
+                .map(item -> item.getPriceAtAddition().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         // Prepare order request
-        List<OrderRequest.OrderItemRequest> orderItems = cart.getCartItems().stream()
-                .map(item -> new OrderRequest.OrderItemRequest(
+        List<OrderItemRequest> orderItems = cart.getCartItems().stream()
+                .map(item -> new OrderItemRequest(
                         item.getProductId(),
                         item.getQuantity(),
                         item.getPriceAtAddition()
                 ))
                 .toList();
 
-        OrderRequest orderRequest = new OrderRequest(userId, orderItems);
+        OrderRequest orderRequest = new OrderRequest(userId, totalAmount, paymentMethod, orderItems);
 
-        // Call Order Service to create order
-        OrderResponse orderResponse = orderServiceClient.createOrder(orderRequest);
+        // Call Order Service to checkout with authorization header
+        OrderResponse orderResponse = orderServiceClient.checkout(orderRequest, authorization);
         
         // Clear cart after successful order creation
         clearCart(userId);

@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
-import java.time.LocalDateTime;
+import com.ecom.notificationservice.dto.GlobalErrorResponse;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,22 +20,20 @@ public class GlobalExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     
     @ExceptionHandler(NotificationNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotificationNotFoundException(NotificationNotFoundException ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleNotificationNotFoundException(NotificationNotFoundException ex, WebRequest request) {
         logger.error("Notification not found: {}", ex.getMessage());
         
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.NOT_FOUND.value(),
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            404,
             "Notification Not Found",
-            ex.getMessage(),
-            LocalDateTime.now(),
-            request.getDescription(false)
+            ex.getMessage()
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
     
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ValidationErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<GlobalErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
         logger.error("Validation error: {}", ex.getMessage());
         
         Map<String, String> errors = new HashMap<>();
@@ -44,40 +43,43 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
         
-        ValidationErrorResponse errorResponse = new ValidationErrorResponse(
-            HttpStatus.BAD_REQUEST.value(),
+        // Convert validation errors to a single message
+        StringBuilder errorMessage = new StringBuilder();
+        errors.forEach((field, message) -> {
+            if (errorMessage.length() > 0) {
+                errorMessage.append(", ");
+            }
+            errorMessage.append(field).append(": ").append(message);
+        });
+        
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            400,
             "Validation Failed",
-            "Request validation failed",
-            LocalDateTime.now(),
-            errors
+            errorMessage.toString()
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
     
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
         logger.error("Invalid argument provided: {}", ex.getMessage());
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.BAD_REQUEST.value(),
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            400,
             "Invalid Argument",
-            ex.getMessage(),
-            LocalDateTime.now(),
-            request.getDescription(false)
+            ex.getMessage()
         );
         return ResponseEntity.badRequest().body(errorResponse);
     }
     
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, WebRequest request) {
+    public ResponseEntity<GlobalErrorResponse> handleGenericException(Exception ex, WebRequest request) {
         logger.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         
-        ErrorResponse errorResponse = new ErrorResponse(
-            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            500,
             "Internal Server Error",
-            "An unexpected error occurred",
-            LocalDateTime.now(),
-            request.getDescription(false)
+            "An unexpected error occurred"
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);

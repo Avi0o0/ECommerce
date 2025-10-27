@@ -56,4 +56,41 @@ public class AuthenticationService {
             return false;
         }
     }
+    
+    public boolean isUser(String bearerToken) {
+        try {
+            logger.info(ProductServiceConstants.LOG_VALIDATING_TOKEN_WITH_USER_SERVICE);
+            
+            String token = bearerToken.startsWith(ProductServiceConstants.BEARER_PREFIX) ? 
+                bearerToken.substring(ProductServiceConstants.BEARER_TOKEN_START_INDEX) : bearerToken;
+            
+            TokenRequest request = new TokenRequest(token);
+            TokenValidationResponse response = userServiceClient.validateToken(request);
+            
+            logger.info(ProductServiceConstants.LOG_TOKEN_VALIDATION_RESPONSE, 
+                response.isValid(), response.getUsername(), response.getRoles());
+            
+            return response.isValid() && response.getRoles().contains(ProductServiceConstants.ROLE_USER);
+            
+        } catch (Exception e) {
+            logger.error(ProductServiceConstants.LOG_ERROR_VALIDATING_TOKEN, e.getMessage(), e);
+            return false;
+        }
+    }
+    
+    public Long getUserId(String bearerToken) {
+        try {
+            String token = bearerToken.startsWith(ProductServiceConstants.BEARER_PREFIX) ? 
+                bearerToken.substring(ProductServiceConstants.BEARER_TOKEN_START_INDEX) : bearerToken;
+            
+            TokenRequest request = new TokenRequest(token);
+            TokenValidationResponse response = userServiceClient.validateToken(request);
+            
+            return response.isValid() ? response.getUserId() : null;
+            
+        } catch (Exception e) {
+            logger.error(ProductServiceConstants.LOG_ERROR_VALIDATING_TOKEN, e.getMessage(), e);
+            return null;
+        }
+    }
 }
