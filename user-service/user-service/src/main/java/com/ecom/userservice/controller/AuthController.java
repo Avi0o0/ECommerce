@@ -84,7 +84,7 @@ public class AuthController {
                 
                 // Get userId from username
                 Long userId = userRepo.findByUsername(username)
-                        .map(user -> user.getId())
+                        .map(UserAccount::getId)
                         .orElse(null);
                 
                 logger.info("Token validation successful for user: {} (ID: {}) with roles: {}", username, userId, roles);

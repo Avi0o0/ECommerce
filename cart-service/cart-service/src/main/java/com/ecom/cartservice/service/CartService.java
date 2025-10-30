@@ -31,6 +31,7 @@ import com.ecom.cartservice.repository.CartRepository;
 public class CartService {
 
     private static final Logger logger = LoggerFactory.getLogger(CartService.class);
+    public static final String ORDER_STATUS_COMPLETED = "COMPLETED";
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
@@ -78,7 +79,7 @@ public class CartService {
         logger.info("@@@Product details - ID: {}, Name: {}, Price: {}, Stock: {}", 
                 product.getId(), product.getName(), product.getPrice(), product.getStockQuantity());
         
-        // Check if product is available (has stock)
+        // Check if product is available
         if (!product.isAvailable()) {
             throw new ProductNotAvailableException(String.format(CartServiceConstants.PRODUCT_NOT_AVAILABLE_MESSAGE, 
                 0, request.getQuantity()));
@@ -202,7 +203,9 @@ public class CartService {
         OrderResponse orderResponse = orderServiceClient.checkout(orderRequest, authorization);
         
         // Clear cart after successful order creation
-        clearCart(userId);
+        if(ORDER_STATUS_COMPLETED.equalsIgnoreCase(orderResponse.getOrderStatus())){
+        	clearCart(userId);
+        }
         
         logger.info(CartServiceConstants.LOG_CHECKOUT_COMPLETED_FOR_USER, userId, orderResponse.getId());
         return orderResponse;

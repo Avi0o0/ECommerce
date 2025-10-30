@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ecom.paymentservice.client.NotificationClient;
+import com.ecom.paymentservice.config.RabbitMQProducer;
 import com.ecom.paymentservice.constants.PaymentServiceConstants;
 import com.ecom.paymentservice.dto.NotificationRequest;
 import com.ecom.paymentservice.dto.PaymentRequest;
@@ -27,11 +27,11 @@ public class PaymentService {
     private final Random random = new Random();
 
     private final PaymentRepository paymentRepository;
-    private final NotificationClient notificationClient;
+    private final RabbitMQProducer rabbitMQProducer;
     
-    public PaymentService(PaymentRepository paymentRepository, NotificationClient notificationClient) {
+    public PaymentService(PaymentRepository paymentRepository, RabbitMQProducer rabbitMQProducer) {
         this.paymentRepository = paymentRepository;
-        this.notificationClient = notificationClient;
+        this.rabbitMQProducer = rabbitMQProducer;
     }
     
     public PaymentResponse processPayment(PaymentRequest paymentRequest) {
@@ -62,7 +62,7 @@ public class PaymentService {
     	notificationRequest.setType(savedPayment.getPaymentMethod());
     	notificationRequest.setUserId(savedPayment.getUserId());
     	notificationRequest.setMessage("This is notification regarding the transection " + savedPayment.getTransactionId() + ", your payment of Rs." + savedPayment.getAmount() + " using your " + savedPayment.getPaymentMethod() + " is " + savedPayment.getPaymentStatus());
-		notificationClient.sendNotification(notificationRequest);
+		rabbitMQProducer.sendNotificationMessage(notificationRequest);
 	}
 
 	@Transactional(readOnly = true)

@@ -1,12 +1,7 @@
 {"properties": [
   {
-    "name": "security.jwt.expiration-seconds",
+    "name": "dev.name",
     "type": "java.lang.String",
-    "description": "A description for 'security.jwt.expiration-seconds'"
-  },
-  {
-    "name": "security.jwt.secret",
-    "type": "java.lang.String",
-    "description": "A description for 'security.jwt.secret'"
+    "description": "A description for 'dev.name'"
   }
 ]}
