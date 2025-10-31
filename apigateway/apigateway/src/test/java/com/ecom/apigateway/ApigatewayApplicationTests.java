@@ -6,8 +6,8 @@ import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
 @TestPropertySource(properties = {
-    "spring.redis.host=localhost",
-    "spring.redis.port=6379",
+   // "spring.redis.host=localhost",
+  //  "spring.redis.port=6379",
     "eureka.client.enabled=false"
 })
 class ApigatewayApplicationTests {

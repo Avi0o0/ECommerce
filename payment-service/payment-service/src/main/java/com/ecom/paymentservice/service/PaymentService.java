@@ -61,7 +61,7 @@ public class PaymentService {
     	NotificationRequest notificationRequest = new NotificationRequest();
     	notificationRequest.setType(savedPayment.getPaymentMethod());
     	notificationRequest.setUserId(savedPayment.getUserId());
-    	notificationRequest.setMessage("This is notification regarding the transection " + savedPayment.getTransactionId() + ", your payment of Rs." + savedPayment.getAmount() + " using your " + savedPayment.getPaymentMethod() + " is " + savedPayment.getPaymentStatus());
+    	notificationRequest.setMessage("This is notification regarding the transaction " + savedPayment.getTransactionId() + ", your payment of Rs." + savedPayment.getAmount() + " using your " + savedPayment.getPaymentMethod() + " is " + savedPayment.getPaymentStatus());
 		rabbitMQProducer.sendNotificationMessage(notificationRequest);
 	}
 

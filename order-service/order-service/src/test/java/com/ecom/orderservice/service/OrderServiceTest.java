@@ -119,7 +119,6 @@ class OrderServiceTest {
             return item;
         });
         when(paymentClient.processPayment(any(PaymentRequest.class))).thenReturn(paymentResponse);
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(savedOrder));
         when(orderItemRepository.findByOrderId(1L)).thenReturn(Arrays.asList(orderItem));
         doNothing().when(productServiceClient).reduceStockByProductId(anyLong(), anyInt());
 
@@ -156,7 +155,6 @@ class OrderServiceTest {
             return item;
         });
         when(paymentClient.processPayment(any(PaymentRequest.class))).thenReturn(paymentResponse);
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(savedOrder));
 
         // Act
         OrderResponse result = orderService.checkout(orderRequest);
@@ -198,7 +196,6 @@ class OrderServiceTest {
             return item;
         });
         when(paymentClient.processPayment(any(PaymentRequest.class))).thenReturn(paymentResponse);
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(savedOrder));
         when(orderItemRepository.findByOrderId(1L)).thenReturn(Arrays.asList(item1, item2));
         doNothing().when(productServiceClient).reduceStockByProductId(anyLong(), anyInt());
 
@@ -376,9 +373,6 @@ class OrderServiceTest {
             return item;
         });
         when(paymentClient.processPayment(captor.capture())).thenReturn(paymentResponse);
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(savedOrder));
-        when(orderItemRepository.findByOrderId(1L)).thenReturn(Arrays.asList(orderItem));
-        doNothing().when(productServiceClient).reduceStockByProductId(anyLong(), anyInt());
 
         // Act
         orderService.checkout(orderRequest);
@@ -418,7 +412,6 @@ class OrderServiceTest {
         });
         
         when(paymentClient.processPayment(any(PaymentRequest.class))).thenReturn(paymentResponse);
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(savedOrder));
         when(orderItemRepository.findByOrderId(1L)).thenReturn(Arrays.asList(orderItem));
         doNothing().when(productServiceClient).reduceStockByProductId(anyLong(), anyInt());
 
@@ -457,7 +450,6 @@ class OrderServiceTest {
             return item;
         });
         when(paymentClient.processPayment(any(PaymentRequest.class))).thenReturn(paymentResponse);
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(savedOrder));
 
         // Act
         OrderResponse result = orderService.checkout(orderRequest);

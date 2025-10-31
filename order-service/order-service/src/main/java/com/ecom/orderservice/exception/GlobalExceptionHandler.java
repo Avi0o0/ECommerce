@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -50,6 +51,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
     
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<GlobalErrorResponse> handleMissingHeaderException(MissingRequestHeaderException ex) {
+        logger.warn("Missing required request header: {}", ex.getHeaderName());
+
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            401,
+            "Authorization header is required",
+            "Authorization header is required"
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<GlobalErrorResponse> handleGenericException(Exception ex, WebRequest request) {
         logger.error(OrderServiceConstants.LOG_UNEXPECTED_ERROR_OCCURRED, ex.getMessage(), ex);

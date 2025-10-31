@@ -19,7 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.ecom.paymentservice.client.NotificationClient;
+import com.ecom.paymentservice.config.RabbitMQProducer;
 import com.ecom.paymentservice.dto.NotificationRequest;
 import com.ecom.paymentservice.dto.PaymentRequest;
 import com.ecom.paymentservice.dto.PaymentResponse;
@@ -29,14 +29,14 @@ import com.ecom.paymentservice.exception.PaymentNotFoundException;
 import com.ecom.paymentservice.repository.PaymentRepository;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("PaymentService Tests")
+@DisplayName("PaymentServiceTests")
 class PaymentServiceTest {
 
     @Mock
     private PaymentRepository paymentRepository;
 
     @Mock
-    private NotificationClient notificationClient;
+    private RabbitMQProducer rabbitMQProducer;
 
     @InjectMocks
     private PaymentService paymentService;
@@ -70,7 +70,7 @@ class PaymentServiceTest {
     void testProcessPayment_Success() {
         // Arrange
         when(paymentRepository.save(any(Payment.class))).thenReturn(savedPayment);
-        doNothing().when(notificationClient).sendNotification(any(NotificationRequest.class));
+        doNothing().when(rabbitMQProducer).sendNotificationMessage(any(NotificationRequest.class));
 
         // Act
         PaymentResponse result = paymentService.processPayment(paymentRequest);
@@ -82,7 +82,7 @@ class PaymentServiceTest {
         assertNotNull(result.getTransactionId());
         assertTrue(result.getTransactionId().startsWith("TXN"));
         verify(paymentRepository, times(1)).save(any(Payment.class));
-        verify(notificationClient, times(1)).sendNotification(any(NotificationRequest.class));
+        verify(rabbitMQProducer, times(1)).sendNotificationMessage(any(NotificationRequest.class));
     }
 
     @Test
@@ -103,7 +103,7 @@ class PaymentServiceTest {
             p.setTransactionId("TXN" + System.currentTimeMillis());
             return p;
         });
-        doNothing().when(notificationClient).sendNotification(any(NotificationRequest.class));
+        doNothing().when(rabbitMQProducer).sendNotificationMessage(any(NotificationRequest.class));
 
         // Act
         PaymentResponse result1 = paymentService.processPayment(paymentRequest);
@@ -122,7 +122,7 @@ class PaymentServiceTest {
         // Arrange
         ArgumentCaptor<NotificationRequest> captor = ArgumentCaptor.forClass(NotificationRequest.class);
         when(paymentRepository.save(any(Payment.class))).thenReturn(savedPayment);
-        doNothing().when(notificationClient).sendNotification(captor.capture());
+        doNothing().when(rabbitMQProducer).sendNotificationMessage(captor.capture());
 
         // Act
         paymentService.processPayment(paymentRequest);
@@ -133,7 +133,7 @@ class PaymentServiceTest {
         assertEquals("CREDIT_CARD", notification.getType());
         assertEquals(100L, notification.getUserId());
         assertNotNull(notification.getMessage());
-        verify(notificationClient, times(1)).sendNotification(any(NotificationRequest.class));
+        verify(rabbitMQProducer, times(1)).sendNotificationMessage(any(NotificationRequest.class));
     }
 
     // Test: Get Payment by ID
@@ -176,10 +176,11 @@ class PaymentServiceTest {
         PaymentResponse result = paymentService.getPaymentById(1L);
 
         // Assert
+        System.out.println(result.getPaymentStatus());
         assertEquals("CREDIT_CARD", result.getPaymentMethod());
-        assertEquals("COMPLETED", result.getPaymentStatus());
+        assertEquals("SUCCESS", result.getPaymentStatus());
         assertEquals("TXN123456789", result.getTransactionId());
-        assertEquals("USD", result.getCurrency());
+        assertEquals("INR", result.getCurrency());
         verify(paymentRepository, times(1)).findById(1L);
     }
 
@@ -246,19 +247,19 @@ class PaymentServiceTest {
 
     // Test: Payment Status Handling
     @Test
-    @DisplayName("Should handle COMPLETED payment status")
+    @DisplayName("Should handle SUCCESS payment status")
     void testProcessPayment_CompletedStatus() {
         // Arrange
         savedPayment.setPaymentStatus(PaymentStatus.SUCCESS);
         when(paymentRepository.save(any(Payment.class))).thenReturn(savedPayment);
-        doNothing().when(notificationClient).sendNotification(any(NotificationRequest.class));
+        doNothing().when(rabbitMQProducer).sendNotificationMessage(any(NotificationRequest.class));
 
         // Act
         PaymentResponse result = paymentService.processPayment(paymentRequest);
 
         // Assert
         assertNotNull(result);
-        assertEquals("COMPLETED", result.getPaymentStatus());
+        assertEquals("SUCCESS", result.getPaymentStatus());
         verify(paymentRepository, times(1)).save(any(Payment.class));
     }
 
@@ -266,24 +267,29 @@ class PaymentServiceTest {
     @DisplayName("Should handle FAILED payment status")
     void testProcessPayment_FailedStatus() {
         // Arrange
-        savedPayment.setPaymentStatus(PaymentStatus.FAILED);
-        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> {
-            Payment p = invocation.getArgument(0);
-            p.setId(1L);
-            p.setPaymentStatus(PaymentStatus.FAILED);
-            return p;
-        });
-        doNothing().when(notificationClient).sendNotification(any(NotificationRequest.class));
+        Payment failedPayment = new Payment();
+        failedPayment.setId(1L);
+        failedPayment.setOrderId(paymentRequest.getOrderId());
+        failedPayment.setUserId(paymentRequest.getUserId());
+        failedPayment.setAmount(paymentRequest.getAmount());
+        failedPayment.setPaymentMethod(paymentRequest.getPaymentMethod());
+        failedPayment.setPaymentStatus(PaymentStatus.FAILED);
+        failedPayment.setTransactionId("TXN_FAILED");
+        failedPayment.setCreatedAt(LocalDateTime.now());
+        failedPayment.setUpdatedAt(LocalDateTime.now());
+
+        when(paymentRepository.save(any(Payment.class))).thenReturn(failedPayment);
+        doNothing().when(rabbitMQProducer).sendNotificationMessage(any(NotificationRequest.class));
 
         // Act
         PaymentResponse result = paymentService.processPayment(paymentRequest);
 
         // Assert
         assertNotNull(result);
-        // Status could be COMPLETED or FAILED based on random probability
-        assertTrue(result.getPaymentStatus().equals("COMPLETED") || 
-                   result.getPaymentStatus().equals("FAILED"));
+        assertEquals("FAILED", result.getPaymentStatus());
+        assertEquals("TXN_FAILED", result.getTransactionId());
         verify(paymentRepository, times(1)).save(any(Payment.class));
+        verify(rabbitMQProducer, times(1)).sendNotificationMessage(any(NotificationRequest.class));
     }
 
     // Test: Notification Generation
@@ -293,15 +299,15 @@ class PaymentServiceTest {
         // Arrange
         ArgumentCaptor<NotificationRequest> captor = ArgumentCaptor.forClass(NotificationRequest.class);
         when(paymentRepository.save(any(Payment.class))).thenReturn(savedPayment);
-        doNothing().when(notificationClient).sendNotification(captor.capture());
+        doNothing().when(rabbitMQProducer).sendNotificationMessage(captor.capture());
 
         // Act
         paymentService.processPayment(paymentRequest);
 
         // Assert
-        verify(notificationClient, times(1)).sendNotification(any(NotificationRequest.class));
+        verify(rabbitMQProducer, times(1)).sendNotificationMessage(any(NotificationRequest.class));
         NotificationRequest notification = captor.getValue();
-        assertTrue(notification.getMessage().contains("transection"));
+        assertTrue(notification.getMessage().contains("notification regarding the transaction"));
     }
 
     // Helper Methods

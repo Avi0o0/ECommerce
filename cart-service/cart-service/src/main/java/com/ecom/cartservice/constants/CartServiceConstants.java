@@ -22,7 +22,7 @@ public final class CartServiceConstants {
     public static final String PRODUCT_NOT_AVAILABLE_MESSAGE = "Product not available or insufficient stock. Available: %d, Requested: %d";
     public static final String PRODUCT_NOT_FOUND_MESSAGE = "Product not found or inactive";
     public static final String PRODUCT_INSUFFICIENT_STOCK_MESSAGE = "Insufficient stock. Available: %d, Requested total: %d";
-    public static final String PRODUCT_DETAILS_UNAVAILABLE_MESSAGE = "Product details unavailable";
+    public static final String PRODUCT_DETAILS_UNAVAILABLE_MESSAGE = "Product details are temporarily unavailable";
     public static final String PRODUCT_DETAILS_FETCH_ERROR_MESSAGE = "Could not fetch product details for product ID: %d";
     
     // Authentication Messages

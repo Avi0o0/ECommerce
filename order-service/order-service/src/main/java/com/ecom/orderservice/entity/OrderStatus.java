@@ -20,8 +20,5 @@ public enum OrderStatus {
         return displayName;
     }
     
-    @Override
-    public String toString() {
-        return displayName;
-    }
+    // Using default enum toString() that returns the name
 }
