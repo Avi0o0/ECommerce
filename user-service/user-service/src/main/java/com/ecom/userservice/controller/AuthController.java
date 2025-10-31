@@ -116,9 +116,18 @@ public class AuthController {
                 throw new UsernameAlreadyExistsException("Username '" + request.username() + "' already exists");
             }
 
+            if (request.email() != null && userRepo.existsByEmail(request.email())) {
+                logger.warn("Registration failed - email already exists: {}", request.email());
+                throw new UsernameAlreadyExistsException("Email '" + request.email() + "' already exists");
+            }
+
             UserAccount user = new UserAccount();
             user.setUsername(request.username());
             user.setPasswordHash(passwordEncoder.encode(request.password()));
+            user.setEmail(request.email());
+            user.setFirstName(request.firstName());
+            user.setLastName(request.lastName());
+            user.setAddress(request.address());
 
             // Set default role as USER
             Role role = roleRepo.findByName(request.role()).orElseGet(() -> {

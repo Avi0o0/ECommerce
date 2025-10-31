@@ -145,6 +145,11 @@ public final class OrderServiceConstants {
     public static final String QUANTITY_MIN_VALUE_MESSAGE = "Quantity must be at least 1";
     public static final String PRICE_REQUIRED_MESSAGE = "Price is required";
     public static final String PRICE_MIN_VALUE_MESSAGE = "Price must be greater than 0";
+
+    // Product validation messages
+    public static final String PRODUCT_NOT_FOUND_MESSAGE = "Product not found or inactive";
+    public static final String PRODUCT_NOT_AVAILABLE_MESSAGE = "Product not available or insufficient stock. Available: %d, Requested: %d";
+    public static final String PRODUCT_PRICE_MISSING_MESSAGE = "Product price information is not available";
     
     // Payment Request Validation Messages
     public static final String ORDER_ID_REQUIRED_MESSAGE = "Order ID is required";

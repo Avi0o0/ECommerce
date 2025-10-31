@@ -1,17 +1,16 @@
 package com.ecom.userservice.dto;
 
 import java.util.List;
-import com.ecom.userservice.entity.UserAccount;
 
 public class UserListResponse {
     private int status;
     private String message;
     private int count;
-    private List<UserAccount> users;
+    private List<UserResponse> users;
     
     public UserListResponse() {}
     
-    public UserListResponse(int status, String message, int count, List<UserAccount> users) {
+    public UserListResponse(int status, String message, int count, List<UserResponse> users) {
         this.status = status;
         this.message = message;
         this.count = count;
@@ -43,11 +42,11 @@ public class UserListResponse {
         this.count = count;
     }
     
-    public List<UserAccount> getUsers() {
+    public List<UserResponse> getUsers() {
         return users;
     }
     
-    public void setUsers(List<UserAccount> users) {
+    public void setUsers(List<UserResponse> users) {
         this.users = users;
     }
 }

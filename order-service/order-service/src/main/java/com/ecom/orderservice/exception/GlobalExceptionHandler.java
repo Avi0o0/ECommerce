@@ -51,6 +51,17 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
     
+    @ExceptionHandler(com.ecom.orderservice.exception.ProductNotAvailableException.class)
+    public ResponseEntity<GlobalErrorResponse> handleProductNotAvailableException(com.ecom.orderservice.exception.ProductNotAvailableException ex) {
+        logger.warn("Product not available: {}", ex.getMessage());
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            OrderServiceConstants.HTTP_BAD_REQUEST,
+            "Product Not Available",
+            ex.getMessage()
+        );
+        return new ResponseEntity<>(errorResponse, org.springframework.http.HttpStatus.BAD_REQUEST);
+    }
+    
     @ExceptionHandler(MissingRequestHeaderException.class)
     public ResponseEntity<GlobalErrorResponse> handleMissingHeaderException(MissingRequestHeaderException ex) {
         logger.warn("Missing required request header: {}", ex.getHeaderName());

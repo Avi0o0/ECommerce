@@ -14,12 +14,12 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ecom.orderservice.constants.OrderServiceConstants;
 import com.ecom.orderservice.dto.GlobalErrorResponse;
 import com.ecom.orderservice.dto.OrderRequest;
 import com.ecom.orderservice.dto.OrderResponse;
 import com.ecom.orderservice.service.AuthenticationService;
 import com.ecom.orderservice.service.OrderService;
-import com.ecom.orderservice.constants.OrderServiceConstants;
 
 import jakarta.validation.Valid;
 
@@ -43,13 +43,22 @@ public class OrderController {
         
         try {
             // Validate JWT token - only USER role can checkout
-        	logger.info("isuser: {}",authenticationService.isUser(authorization));
+            logger.info("isuser: {}", authenticationService.isUser(authorization));
             if (!authenticationService.isUser(authorization)) {
                 logger.warn(OrderServiceConstants.LOG_UNAUTHORIZED_CHECKOUT_ATTEMPT, request.getUserId());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new GlobalErrorResponse(401, OrderServiceConstants.USER_ROLE_REQUIRED_MESSAGE, OrderServiceConstants.USER_ROLE_REQUIRED_MESSAGE));
             }
-            
+
+            // Ensure the token belongs to the same userId provided in the request
+            var tokenDetails = authenticationService.validateTokenAndGetDetails(authorization);
+            Long tokenUserId = tokenDetails.getUserId();
+            if (tokenUserId == null || !tokenUserId.equals(request.getUserId())) {
+                logger.warn("User {} attempted to checkout for user {}", tokenUserId, request.getUserId());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new GlobalErrorResponse(403, OrderServiceConstants.UNAUTHORIZED_ACCESS_MESSAGE, "Users can only checkout for themselves"));
+            }
+
             OrderResponse order = orderService.checkout(request);
             
             // Check if order is INCOMPLETE (payment service unavailable)

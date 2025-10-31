@@ -46,6 +46,40 @@ public class OrderService {
 		logger.info(OrderServiceConstants.LOG_STARTING_CHECKOUT_PROCESS, request.getUserId());
 
 		try {
+			// Validate products and stock before creating the order
+			if (request.getOrderItems() == null || request.getOrderItems().isEmpty()) {
+				throw new IllegalArgumentException(OrderServiceConstants.ORDER_ITEMS_REQUIRED_MESSAGE);
+			}
+
+			for (com.ecom.orderservice.dto.OrderItemRequest itemRequest : request.getOrderItems()) {
+				try {
+					com.ecom.orderservice.dto.ProductResponse product = productServiceClient.getProductById(itemRequest.getProductId());
+					if (product == null) {
+						throw new com.ecom.orderservice.exception.ProductNotAvailableException(OrderServiceConstants.PRODUCT_NOT_FOUND_MESSAGE + ": " + itemRequest.getProductId());
+					}
+
+					Integer available = product.getStockQuantity();
+					if (available == null || available <= 0) {
+						throw new com.ecom.orderservice.exception.ProductNotAvailableException(
+								String.format(OrderServiceConstants.PRODUCT_NOT_AVAILABLE_MESSAGE, 0, itemRequest.getQuantity()));
+					}
+
+					if (available < itemRequest.getQuantity()) {
+						throw new com.ecom.orderservice.exception.ProductNotAvailableException(
+								String.format(OrderServiceConstants.PRODUCT_NOT_AVAILABLE_MESSAGE, available, itemRequest.getQuantity()));
+					}
+
+					if (product.getPrice() == null) {
+						throw new com.ecom.orderservice.exception.ProductNotAvailableException(OrderServiceConstants.PRODUCT_PRICE_MISSING_MESSAGE);
+					}
+				} catch (com.ecom.orderservice.exception.ProductNotAvailableException pna) {
+					throw pna;
+				} catch (Exception e) {
+					logger.warn("Error fetching product {}: {}", itemRequest.getProductId(), e.getMessage());
+					throw new com.ecom.orderservice.exception.ProductNotAvailableException(OrderServiceConstants.PRODUCT_NOT_FOUND_MESSAGE + ": " + itemRequest.getProductId(), e);
+				}
+			}
+
 			// Create order with PENDING status
 			Order order = new Order();
 			order.setUserId(request.getUserId());
@@ -167,8 +201,35 @@ public class OrderService {
 	}
 
 	private OrderResponse convertToResponse(Order order) {
-		return new OrderResponse(order.getId(), order.getUserId(), order.getTotalAmount(), order.getOrderStatus(),
-				order.getPaymentStatus(), order.getCreatedAt());
+		OrderResponse response = new OrderResponse(order.getId(), order.getUserId(), order.getTotalAmount(),
+				order.getOrderStatus(), order.getPaymentStatus(), order.getCreatedAt());
+
+		// Fetch order items and enrich with product details
+		List<OrderItem> orderItems = orderItemRepository.findByOrderId(order.getId());
+
+		List<com.ecom.orderservice.dto.OrderItemResponse> itemResponses = orderItems.stream().map(item -> {
+			com.ecom.orderservice.dto.OrderItemResponse itemResp = new com.ecom.orderservice.dto.OrderItemResponse();
+			itemResp.setId(item.getId());
+			itemResp.setProductId(item.getProductId());
+			itemResp.setQuantity(item.getQuantity());
+			itemResp.setPrice(item.getPrice());
+
+			try {
+				com.ecom.orderservice.dto.ProductResponse product = productServiceClient.getProductById(item.getProductId());
+				itemResp.setProduct(product);
+			} catch (Exception e) {
+				logger.warn("Could not fetch product details for productId {}: {}", item.getProductId(), e.getMessage());
+				// product remains null if unable to fetch
+			}
+
+			return itemResp;
+		}).toList();
+
+		response.setItems(itemResponses);
+		int totalItems = itemResponses.stream().mapToInt(ir -> ir.getQuantity() == null ? 0 : ir.getQuantity()).sum();
+		response.setTotalItems(totalItems);
+
+		return response;
 	}
 
 	/**
