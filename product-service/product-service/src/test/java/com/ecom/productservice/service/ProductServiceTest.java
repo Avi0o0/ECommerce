@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -402,7 +403,8 @@ class ProductServiceTest {
     @DisplayName("Should complete buy now when product has sufficient stock")
     void testBuyNow_Success() {
         // Arrange
-        OrderResponse orderResponse = new OrderResponse(1L, 1L, new BigDecimal("99.99"), "COMPLETED", "SUCCESS", LocalDateTime.now(), null);
+    	UUID  userId = new UUID(3, 3);
+        OrderResponse orderResponse = new OrderResponse(1L, userId, new BigDecimal("99.99"), "COMPLETED", "SUCCESS", LocalDateTime.now(), null);
         
         when(productRepository.findById(1L)).thenReturn(Optional.of(sampleProduct));
         when(orderServiceClient.checkout(any(OrderRequest.class), anyString())).thenReturn(orderResponse);
@@ -410,7 +412,7 @@ class ProductServiceTest {
         when(productRepository.save(any(Product.class))).thenReturn(sampleProduct);
 
         // Act
-        OrderResponse result = productService.buyNow(1L, 1L, 2, "CREDIT_CARD", "Bearer token");
+        OrderResponse result = productService.buyNow(userId, 1L, 2, "CREDIT_CARD", "Bearer token");
 
         // Assert
         assertNotNull(result);
@@ -422,12 +424,13 @@ class ProductServiceTest {
     @Test
     @DisplayName("Should throw ProductNotFoundException when product not found for buy now")
     void testBuyNow_ProductNotFound() {
+    	UUID  userId = new UUID(3, 3);
         // Arrange
         when(productRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThrows(ProductNotFoundException.class, () -> 
-            productService.buyNow(1L, 999L, 2, "CREDIT_CARD", "Bearer token"));
+            productService.buyNow(userId, 999L, 2, "CREDIT_CARD", "Bearer token"));
         verify(productRepository, times(1)).findById(999L);
         verify(orderServiceClient, never()).checkout(any(), any());
     }
@@ -435,12 +438,13 @@ class ProductServiceTest {
     @Test
     @DisplayName("Should throw IllegalArgumentException when insufficient stock for buy now")
     void testBuyNow_InsufficientStock() {
+    	UUID  userId = new UUID(3, 3);
         // Arrange
         when(productRepository.findById(1L)).thenReturn(Optional.of(sampleProduct));
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> 
-            productService.buyNow(1L, 1L, 200, "CREDIT_CARD", "Bearer token"));
+            productService.buyNow(userId, 1L, 200, "CREDIT_CARD", "Bearer token"));
         verify(productRepository, times(1)).findById(1L);
         verify(orderServiceClient, never()).checkout(any(), any());
     }

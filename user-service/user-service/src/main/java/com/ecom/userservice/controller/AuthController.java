@@ -1,6 +1,7 @@
 package com.ecom.userservice.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,14 +41,17 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final UserAccountRepository userRepo;
     private final RoleRepository roleRepo;
+    private final com.ecom.userservice.client.ProductServiceClient productServiceClient;
 
     public AuthController(AuthenticationManager authenticationManager, JwtService jwtService,
-            PasswordEncoder passwordEncoder, UserAccountRepository userRepo, RoleRepository roleRepo) {
+            PasswordEncoder passwordEncoder, UserAccountRepository userRepo, RoleRepository roleRepo,
+            com.ecom.userservice.client.ProductServiceClient productServiceClient) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
+        this.productServiceClient = productServiceClient;
     }
 
     @PostMapping("/login")
@@ -62,7 +66,19 @@ public class AuthController {
                     .generateToken((org.springframework.security.core.userdetails.User) auth.getPrincipal());
 
             logger.info("Login successful for user: {}", request.username());
-            return ResponseEntity.ok(new TokenResponse(token));
+
+            // Try to fetch recentActivities based on user's search history (best-effort)
+            java.util.List<com.ecom.userservice.dto.ProductResponse> recent = null;
+            try {
+                UUID userId = userRepo.findByUsername(request.username()).map(com.ecom.userservice.entity.UserAccount::getId).orElse(null);
+                if (userId != null) {
+                    recent = productServiceClient.getRecentProductsForUser(userId, 3);
+                }
+            } catch (Exception e) {
+                logger.warn("Could not fetch recent activities for user {}: {}", request.username(), e.getMessage());
+            }
+
+            return ResponseEntity.ok(new TokenResponse(token, recent));
         } catch (BadCredentialsException e) {
             logger.warn("Login failed for user: {} - Invalid credentials", request.username());
             throw new InvalidCredentialsException("Invalid username or password");
@@ -83,7 +99,7 @@ public class AuthController {
                 List<String> roles = jwtService.extractRoles(request.token());
                 
                 // Get userId from username
-                Long userId = userRepo.findByUsername(username)
+                UUID userId = userRepo.findByUsername(username)
                         .map(UserAccount::getId)
                         .orElse(null);
                 
@@ -141,7 +157,7 @@ public class AuthController {
 
             logger.info("User registration successful for username: {}", request.username());
             SuccessResponse response = new SuccessResponse(201, "User registered successfully");
-            return ResponseEntity.status(201).body(response);
+            return ResponseEntity.status(HttpStatus.CREATED.value()).body(response);
         } catch (UsernameAlreadyExistsException e) {
             throw e;
         } catch (Exception e) {

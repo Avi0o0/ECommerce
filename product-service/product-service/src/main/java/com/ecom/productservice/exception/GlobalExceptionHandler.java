@@ -1,5 +1,8 @@
 package com.ecom.productservice.exception;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -11,9 +14,6 @@ import org.springframework.web.context.request.WebRequest;
 
 import com.ecom.productservice.constants.ProductServiceConstants;
 import com.ecom.productservice.dto.GlobalErrorResponse;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -31,6 +31,19 @@ public class GlobalExceptionHandler {
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+    
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<GlobalErrorResponse> handleAuthenticationException(AuthenticationException ex, WebRequest request) {
+        logger.error("Authentication error: {} at path: {}", ex.getMessage(), request.getDescription(false));
+        
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            401,
+            "Authentication Failed",
+            ex.getMessage()
+        );
+        
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
     
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -73,5 +86,18 @@ public class GlobalExceptionHandler {
         );
         
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    
+    @ExceptionHandler(AvailabilityException.class)
+    public ResponseEntity<GlobalErrorResponse> handleAvailabilityException(AvailabilityException ex) {
+        logger.error("Availability error: {} due to: {}", ex.getMessage(), ex.getMessage());
+        
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            400,
+            "Check input quantity",
+            ex.getMessage()
+        );
+        
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
 }

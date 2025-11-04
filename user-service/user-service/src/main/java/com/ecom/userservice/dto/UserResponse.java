@@ -1,9 +1,10 @@
 package com.ecom.userservice.dto;
 
 import java.util.Set;
+import java.util.UUID;
 
 public class UserResponse {
-    private Long id;
+    private UUID id;
     private String username;
     private String firstName;
     private String lastName;
@@ -13,11 +14,11 @@ public class UserResponse {
 
     public UserResponse() {}
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

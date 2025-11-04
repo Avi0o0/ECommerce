@@ -3,11 +3,12 @@ package com.ecom.productservice.dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 public class OrderResponse {
     
     private Long id;
-    private Long userId;
+    private UUID userId;
     private BigDecimal totalAmount;
     private String orderStatus;
     private String paymentStatus;
@@ -17,7 +18,7 @@ public class OrderResponse {
     // Constructors
     public OrderResponse() {}
     
-    public OrderResponse(Long id, Long userId, BigDecimal totalAmount, String orderStatus, 
+    public OrderResponse(Long id, UUID userId, BigDecimal totalAmount, String orderStatus, 
                         String paymentStatus, LocalDateTime createdAt, List<OrderItemResponse> orderItems) {
         this.id = id;
         this.userId = userId;
@@ -37,11 +38,11 @@ public class OrderResponse {
         this.id = id;
     }
     
-    public Long getUserId() {
+    public UUID getUserId() {
         return userId;
     }
     
-    public void setUserId(Long userId) {
+    public void setUserId(UUID userId) {
         this.userId = userId;
     }
     

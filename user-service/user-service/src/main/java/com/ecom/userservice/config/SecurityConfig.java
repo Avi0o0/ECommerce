@@ -49,7 +49,7 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/**", "/auth/login", "/auth/register", "/auth/validate").permitAll()
+                        .requestMatchers("/actuator/**", "/auth/login", "/auth/register", "/auth/validate", "/chatbot").permitAll()
                         .requestMatchers("/users/**").hasAnyRole("ADMIN", "USER")
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider)

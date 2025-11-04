@@ -1,0 +1,27 @@
+[
+  {
+    "question": "Where can I check my orders?",
+    "answer": "Go to your profile, then go to Orders.",
+    "aliases": ["where are my orders", "my orders", "order history", "check orders"]
+  },
+  {
+    "question": "How to update password?",
+    "answer": "Go to Profile, then select Update Password.",
+    "aliases": ["change password", "update password", "reset password"]
+  },
+  {
+    "question": "How to check order status?",
+    "answer": "Go to your Profile, then go to Orders, open your order, and there you can find all the details.",
+    "aliases": ["order status", "track order", "track my order", "where is my order"]
+  },
+  {
+    "question": "How to contact us?",
+    "answer": "You can call us on +XX XXXXX and email us at XXXXXX@xmail.xcom.",
+    "aliases": ["contact us", "how can i contact", "contact info", "how do i contact", "get in touch", "support contact"]
+  },
+  {
+      "question": "Hello",
+      "answer": "Hello dear customer, How can i help you",
+      "aliases": ["hi", "Hi there", "i need help"]
+    }
+]

@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,7 +43,8 @@ class UserAccountDetailsServiceTest {
         userRole.setName(RoleName.USER);
 
         userAccount = new UserAccount();
-        userAccount.setId(1L);
+        UUID uuid = new UUID(3, 3);
+        userAccount.setId(uuid);
         userAccount.setUsername("testuser");
         userAccount.setPasswordHash("$2a$10$encodedPassword");
         
@@ -81,7 +83,8 @@ class UserAccountDetailsServiceTest {
         adminRoles.add(adminRole);
         
         UserAccount adminAccount = new UserAccount();
-        adminAccount.setId(2L);
+        UUID uuid = new UUID(3, 3);
+        adminAccount.setId(uuid);
         adminAccount.setUsername("admin");
         adminAccount.setPasswordHash("$2a$10$encodedPassword");
         adminAccount.setRoles(adminRoles);

@@ -114,4 +114,7 @@ public final class ProductServiceConstants {
     public static final String PRODUCT_SKU_REQUIRED_MESSAGE = "Product SKU is required";
     public static final String PRODUCT_SKU_SIZE_MESSAGE = "Product SKU must not exceed 50 characters";
     public static final String PRODUCT_STOCK_QUANTITY_NON_NEGATIVE_MESSAGE = "Stock quantity must be non-negative";
+    
+    //
+    public static final String PRODUCT_RATE_SUCCESS_MSG = "Thanks for your feedback";
 }

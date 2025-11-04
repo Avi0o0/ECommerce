@@ -1,6 +1,7 @@
 package com.ecom.userservice.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ import com.ecom.userservice.dto.OrderResponse;
 import com.ecom.userservice.dto.SuccessResponse;
 import com.ecom.userservice.dto.UpdatePasswordRequest;
 import com.ecom.userservice.dto.UserListResponse;
+import com.ecom.userservice.dto.UserResponse;
 import com.ecom.userservice.dto.VerifyPasswordRequest;
 import com.ecom.userservice.entity.UserAccount;
 import com.ecom.userservice.exception.PasswordVerificationFailedException;
@@ -69,13 +71,13 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SuccessResponse> getUser(@PathVariable Long id) {
+    public ResponseEntity<SuccessResponse> getUser(@PathVariable UUID id) {
         logger.info(UserServiceConstants.LOG_REQUEST_TO_GET_USER_BY_ID, id);
 
     UserAccount user = userService.getUserById(id);
     logger.info(UserServiceConstants.LOG_SUCCESSFULLY_RETRIEVED_USER, user.getUsername(), id);
 
-    com.ecom.userservice.dto.UserResponse r = new com.ecom.userservice.dto.UserResponse();
+    UserResponse r = new UserResponse();
     r.setId(user.getId());
     r.setUsername(user.getUsername());
     r.setFirstName(user.getFirstName());
@@ -89,7 +91,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<SuccessResponse> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<SuccessResponse> deleteUser(@PathVariable UUID id) {
         logger.info(UserServiceConstants.LOG_REQUEST_TO_DELETE_USER, id);
         
     userService.deleteUser(id);
@@ -99,7 +101,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SuccessResponse> updatePassword(@PathVariable Long id, 
+    public ResponseEntity<SuccessResponse> updatePassword(@PathVariable UUID id, 
                                                     @Valid @RequestBody UpdatePasswordRequest request) {
         logger.info(UserServiceConstants.LOG_REQUEST_TO_UPDATE_PASSWORD, id);
         
@@ -110,7 +112,7 @@ public class UserController {
     }
 
     @PostMapping("/{id}/verify-password")
-    public ResponseEntity<SuccessResponse> verifyPassword(@PathVariable Long id, 
+    public ResponseEntity<SuccessResponse> verifyPassword(@PathVariable UUID id, 
                                                     @Valid @RequestBody VerifyPasswordRequest request) {
         logger.info(UserServiceConstants.LOG_REQUEST_TO_VERIFY_PASSWORD, id);
         

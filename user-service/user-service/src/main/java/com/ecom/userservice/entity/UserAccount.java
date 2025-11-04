@@ -2,6 +2,7 @@ package com.ecom.userservice.entity;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,8 +20,9 @@ import jakarta.persistence.Table;
 public class UserAccount {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	@Column(columnDefinition = "UUID")
+	private UUID id;
 
 	@Column(name = "username", nullable = false, unique = true, length = 128)
 	private String username;
@@ -48,11 +50,11 @@ public class UserAccount {
 	)
 	private Set<Role> roles = new HashSet<>();
 
-	public Long getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(UUID id) {
 		this.id = id;
 	}
 

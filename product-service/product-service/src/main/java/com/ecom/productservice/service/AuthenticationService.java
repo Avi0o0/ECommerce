@@ -1,5 +1,7 @@
 package com.ecom.productservice.service;
 
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -8,6 +10,8 @@ import com.ecom.productservice.constants.ProductServiceConstants;
 import com.ecom.productservice.client.UserServiceClient;
 import com.ecom.productservice.dto.TokenRequest;
 import com.ecom.productservice.dto.TokenValidationResponse;
+
+import jwt.util.JwtTokenUtil;
 
 @Service
 public class AuthenticationService {
@@ -64,6 +68,10 @@ public class AuthenticationService {
             String token = bearerToken.startsWith(ProductServiceConstants.BEARER_PREFIX) ? 
                 bearerToken.substring(ProductServiceConstants.BEARER_TOKEN_START_INDEX) : bearerToken;
             
+            JwtTokenUtil jwtTokenUtil = new JwtTokenUtil();
+            jwtTokenUtil.validateToken(token);
+            logger.info("Validated token: {}, with username: {}", jwtTokenUtil.validateToken(token), jwtTokenUtil.extractUsername(token));
+            
             TokenRequest request = new TokenRequest(token);
             TokenValidationResponse response = userServiceClient.validateToken(request);
             
@@ -78,7 +86,7 @@ public class AuthenticationService {
         }
     }
     
-    public Long getUserId(String bearerToken) {
+    public UUID getUserId(String bearerToken) {
         try {
             String token = bearerToken.startsWith(ProductServiceConstants.BEARER_PREFIX) ? 
                 bearerToken.substring(ProductServiceConstants.BEARER_TOKEN_START_INDEX) : bearerToken;
