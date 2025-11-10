@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
     
-    @ExceptionHandler(com.ecom.orderservice.exception.ProductNotAvailableException.class)
+    @ExceptionHandler(ProductNotAvailableException.class)
     public ResponseEntity<GlobalErrorResponse> handleProductNotAvailableException(com.ecom.orderservice.exception.ProductNotAvailableException ex) {
         logger.warn("Product not available: {}", ex.getMessage());
         GlobalErrorResponse errorResponse = new GlobalErrorResponse(

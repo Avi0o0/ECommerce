@@ -7,7 +7,7 @@ import java.util.List;
 public class OrderResponse {
     
     private Long id;
-    private Long userId;
+    private String userId;
     private BigDecimal totalAmount;
     private String status;
     private LocalDateTime createdAt;
@@ -16,7 +16,7 @@ public class OrderResponse {
     // Constructors
     public OrderResponse() {}
     
-    public OrderResponse(Long id, Long userId, BigDecimal totalAmount, String status, 
+    public OrderResponse(Long id, String userId, BigDecimal totalAmount, String status, 
                        LocalDateTime createdAt, List<OrderItemResponse> orderItems) {
         this.id = id;
         this.userId = userId;
@@ -35,11 +35,11 @@ public class OrderResponse {
         this.id = id;
     }
     
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
     
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
     

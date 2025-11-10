@@ -1,6 +1,8 @@
 package com.ecom.cartservice.repository;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -33,24 +35,24 @@ class CartRepositoryTest {
     void shouldFindCartByUserId() {
         // Given
         Cart cart = new Cart();
-        cart.setUserId(1L);
+        cart.setUserId("1L");
         cart.setCreatedAt(LocalDateTime.now());
         entityManager.persist(cart);
         entityManager.flush();
 
         // When
-        Optional<Cart> found = cartRepository.findByUserId(1L);
+        Optional<Cart> found = cartRepository.findByUserId("1L");
 
         // Then
         assertTrue(found.isPresent());
-        assertEquals(1L, found.get().getUserId());
+        assertEquals("1L", found.get().getUserId());
     }
 
     @Test
     @DisplayName("Should return empty when cart not found")
     void shouldReturnEmpty_whenCartNotFound() {
         // When
-        Optional<Cart> found = cartRepository.findByUserId(999L);
+        Optional<Cart> found = cartRepository.findByUserId("999L");
 
         // Then
         assertTrue(found.isEmpty());
@@ -61,7 +63,7 @@ class CartRepositoryTest {
     void shouldSaveCartWithItems() {
         // Given
         Cart cart = new Cart();
-        cart.setUserId(1L);
+        cart.setUserId("1L");
         cart.setCreatedAt(LocalDateTime.now());
 
         CartItem item = new CartItem();
@@ -91,7 +93,7 @@ class CartRepositoryTest {
     void shouldDeleteCartAndItems() {
         // Given
         Cart cart = new Cart();
-        cart.setUserId(1L);
+        cart.setUserId("1L");
         cart.setCreatedAt(LocalDateTime.now());
 
         CartItem item = new CartItem();
@@ -123,7 +125,7 @@ class CartRepositoryTest {
     void shouldUpdateCartItems() {
         // Given
         Cart cart = new Cart();
-        cart.setUserId(1L);
+        cart.setUserId("1L");
         cart.setCreatedAt(LocalDateTime.now());
 
         CartItem item = new CartItem();

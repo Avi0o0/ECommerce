@@ -16,7 +16,7 @@ public class Payment {
     private Long orderId;
     
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private String userId;
     
     @Column(name = "amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
@@ -43,7 +43,7 @@ public class Payment {
         this.paymentStatus = PaymentStatus.PENDING;
     }
     
-    public Payment(Long orderId, Long userId, BigDecimal amount, String paymentMethod) {
+    public Payment(Long orderId, String userId, BigDecimal amount, String paymentMethod) {
         this();
         this.orderId = orderId;
         this.userId = userId;
@@ -68,11 +68,11 @@ public class Payment {
         this.orderId = orderId;
     }
     
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
     
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
     

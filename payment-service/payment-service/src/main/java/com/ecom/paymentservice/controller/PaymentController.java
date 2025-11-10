@@ -51,7 +51,7 @@ public class PaymentController {
     }
     
     @GetMapping("/user/{userId}")
-    public ResponseEntity<Object> getUserPayments(@PathVariable Long userId) {
+    public ResponseEntity<Object> getUserPayments(@PathVariable String userId) {
         logger.info(PaymentServiceConstants.LOG_GET_USER_PAYMENTS_REQUEST, userId, userId);
         
         List<PaymentResponse> payments = paymentService.getPaymentsByUserId(userId);

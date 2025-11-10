@@ -19,6 +19,7 @@ public class AdminSeeder implements ApplicationRunner {
 	private final UserAccountRepository userRepo;
 	private final RoleRepository roleRepo;
 	private final PasswordEncoder passwordEncoder;
+	private static final String ADMINPASS = "Admin@123";
 
 	public AdminSeeder(UserAccountRepository userRepo, RoleRepository roleRepo, PasswordEncoder passwordEncoder) {
 		this.userRepo = userRepo;
@@ -38,7 +39,7 @@ public class AdminSeeder implements ApplicationRunner {
 		});
 		UserAccount admin = new UserAccount();
 		admin.setUsername("admin");
-		admin.setPasswordHash(passwordEncoder.encode("Admin@123"));
+		admin.setPasswordHash(passwordEncoder.encode(ADMINPASS));
 		admin.setRoles(Set.of(adminRole));
 		userRepo.save(admin);
 	}

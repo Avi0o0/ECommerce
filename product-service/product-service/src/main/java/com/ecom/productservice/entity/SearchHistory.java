@@ -1,7 +1,5 @@
 package com.ecom.productservice.entity;
 
-import java.util.UUID;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,7 +16,7 @@ public class SearchHistory {
     private Long id;
 
     @Column(name = "user_id", nullable = false, unique = true)
-    private UUID userId;
+    private String userId;
 
     /**
      * CSV stored as ",TV,Phone," — commas at ends simplify contains checks
@@ -28,7 +26,7 @@ public class SearchHistory {
 
     public SearchHistory() {}
 
-    public SearchHistory(UUID userId, String searchHistory) {
+    public SearchHistory(String userId, String searchHistory) {
         this.userId = userId;
         this.searchHistory = searchHistory;
     }
@@ -41,11 +39,11 @@ public class SearchHistory {
         this.id = id;
     }
 
-    public UUID getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(UUID userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 

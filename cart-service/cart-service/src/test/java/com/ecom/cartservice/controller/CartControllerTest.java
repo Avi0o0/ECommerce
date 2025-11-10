@@ -2,6 +2,7 @@ package com.ecom.cartservice.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -16,10 +17,10 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -39,10 +40,10 @@ class CartControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @Mock
     private CartService cartService;
 
-    @MockBean
+    @Mock
     private AuthenticationService authenticationService;
 
     private AddToCartRequest addToCartRequest;
@@ -66,7 +67,7 @@ class CartControllerTest {
 
         cartResponse = new CartResponse();
         cartResponse.setId(1L);
-        cartResponse.setUserId(1L);
+        cartResponse.setUserId("1L");
         cartResponse.setTotalPrice(new BigDecimal("199.98"));
         cartResponse.setItems(List.of(cartItemResponse));
         cartResponse.setTotalItems(1);
@@ -80,8 +81,8 @@ class CartControllerTest {
     void shouldReturnCart_whenAuthorized() throws Exception {
         // Given
         when(authenticationService.isUser(authHeader)).thenReturn(true);
-        when(authenticationService.getUserId(authHeader)).thenReturn(1L);
-        when(cartService.getCart(1L)).thenReturn(cartResponse);
+        when(authenticationService.getUserId(authHeader)).thenReturn("");
+        when(cartService.getCart("")).thenReturn(cartResponse);
 
         // When/Then
         mockMvc.perform(get("/cart")
@@ -97,8 +98,8 @@ class CartControllerTest {
     void shouldAddItemToCart_whenAuthorized() throws Exception {
         // Given
         when(authenticationService.isUser(authHeader)).thenReturn(true);
-        when(authenticationService.getUserId(authHeader)).thenReturn(1L);
-        when(cartService.addToCart(anyLong(), any(AddToCartRequest.class))).thenReturn(cartResponse);
+        when(authenticationService.getUserId(authHeader)).thenReturn("");
+        when(cartService.addToCart(anyString(), any(AddToCartRequest.class))).thenReturn(cartResponse);
 
         // When/Then
         mockMvc.perform(post("/cart/add")
@@ -140,7 +141,7 @@ class CartControllerTest {
     void shouldReturnForbidden_whenAccessingOtherUserCart() throws Exception {
         // Given
         when(authenticationService.isUser(authHeader)).thenReturn(true);
-        when(authenticationService.getUserId(authHeader)).thenReturn(2L);
+        when(authenticationService.getUserId(authHeader)).thenReturn("1L");
 
         // When/Then
         mockMvc.perform(post("/cart/add")
@@ -156,8 +157,8 @@ class CartControllerTest {
     void shouldUpdateCartItem_whenAuthorized() throws Exception {
         // Given
         when(authenticationService.isUser(authHeader)).thenReturn(true);
-        when(authenticationService.getUserId(authHeader)).thenReturn(1L);
-        when(cartService.addToCart(anyLong(), any(AddToCartRequest.class))).thenReturn(cartResponse);
+        when(authenticationService.getUserId(authHeader)).thenReturn("2L");
+        when(cartService.addToCart(anyString(), any(AddToCartRequest.class))).thenReturn(cartResponse);
 
         // When/Then
         mockMvc.perform(post("/cart/add")
@@ -174,8 +175,8 @@ class CartControllerTest {
     void shouldRemoveItemFromCart_whenAuthorized() throws Exception {
         // Given
         when(authenticationService.isUser(authHeader)).thenReturn(true);
-        when(authenticationService.getUserId(authHeader)).thenReturn(1L);
-        when(cartService.removeFromCart(anyLong(), anyLong())).thenReturn(cartResponse);
+        when(authenticationService.getUserId(authHeader)).thenReturn("1L");
+        when(cartService.removeFromCart(anyString(), anyLong())).thenReturn(cartResponse);
 
         // When/Then
         mockMvc.perform(delete("/cart/remove/{productId}", 1L)
@@ -190,8 +191,8 @@ class CartControllerTest {
     void shouldClearCart_whenAuthorized() throws Exception {
         // Given
         when(authenticationService.isUser(authHeader)).thenReturn(true);
-        when(authenticationService.getUserId(authHeader)).thenReturn(1L);
-        when(cartService.getCart(anyLong())).thenReturn(cartResponse);
+        when(authenticationService.getUserId(authHeader)).thenReturn("1L");
+        when(cartService.getCart(anyString())).thenReturn(cartResponse);
 
         // When/Then
         mockMvc.perform(delete("/cart/clear")

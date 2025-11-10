@@ -63,7 +63,7 @@ public class NotificationService {
      * Get notifications by user ID
      */
     @Transactional(readOnly = true)
-    public List<NotificationResponse> getUserNotifications(Long userId) {
+    public List<NotificationResponse> getUserNotifications(String userId) {
         logger.info("Getting notifications for user: {}", userId);
         List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
         return notifications.stream()

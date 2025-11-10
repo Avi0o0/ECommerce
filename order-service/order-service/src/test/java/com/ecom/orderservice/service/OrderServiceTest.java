@@ -61,7 +61,7 @@ class OrderServiceTest {
     void setUp() {
         // Setup Order Request
         orderRequest = new OrderRequest();
-        orderRequest.setUserId(1L);
+        orderRequest.setUserId("1L");
         orderRequest.setTotalAmount(new BigDecimal("199.98"));
         orderRequest.setPaymentMethod("CREDIT_CARD");
         
@@ -75,7 +75,7 @@ class OrderServiceTest {
         // Setup Saved Order
         savedOrder = new Order();
         savedOrder.setId(1L);
-        savedOrder.setUserId(1L);
+        savedOrder.setUserId("1L");
         savedOrder.setTotalAmount(new BigDecimal("199.98"));
         savedOrder.setOrderStatus(OrderStatus.PENDING);
         savedOrder.setPaymentStatus("PENDING");
@@ -98,7 +98,7 @@ class OrderServiceTest {
         PaymentResponse paymentResponse = new PaymentResponse();
         paymentResponse.setId(1L);
         paymentResponse.setOrderId(1L);
-        paymentResponse.setUserId(1L);
+        paymentResponse.setUserId("1L");
         paymentResponse.setAmount(new BigDecimal("199.98"));
         paymentResponse.setPaymentStatus("SUCCESS");
         paymentResponse.setTransactionId("TXN123");
@@ -249,7 +249,7 @@ class OrderServiceTest {
         });
         when(orderItemRepository.save(any(OrderItem.class)))
             .thenThrow(new RuntimeException("Database error"));
-        when(orderRepository.findByUserIdOrderByCreatedAtDesc(1L))
+        when(orderRepository.findByUserIdOrderByCreatedAtDesc("1L"))
             .thenReturn(Arrays.asList(savedOrder));
 
         // Act & Assert
@@ -290,61 +290,61 @@ class OrderServiceTest {
     @DisplayName("Should return all orders for a user")
     void testGetOrdersByUserId_Success() {
         // Arrange
-        Order order1 = createOrder(1L, 100L, "100.00");
-        Order order2 = createOrder(2L, 100L, "200.00");
+        Order order1 = createOrder(1L, "100L", "100.00");
+        Order order2 = createOrder(2L, "100L", "200.00");
         List<Order> orders = Arrays.asList(order1, order2);
         
-        when(orderRepository.findByUserIdOrderByCreatedAtDesc(100L)).thenReturn(orders);
+        when(orderRepository.findByUserIdOrderByCreatedAtDesc("100L")).thenReturn(orders);
 
         // Act
-        List<OrderResponse> result = orderService.getOrdersByUserId(100L);
+        List<OrderResponse> result = orderService.getOrdersByUserId("100L");
 
         // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(1L, result.get(0).getId());
         assertEquals(2L, result.get(1).getId());
-        verify(orderRepository, times(1)).findByUserIdOrderByCreatedAtDesc(100L);
+        verify(orderRepository, times(1)).findByUserIdOrderByCreatedAtDesc("100L");
     }
 
     @Test
     @DisplayName("Should return empty list when user has no orders")
     void testGetOrdersByUserId_EmptyList() {
         // Arrange
-        when(orderRepository.findByUserIdOrderByCreatedAtDesc(999L))
+        when(orderRepository.findByUserIdOrderByCreatedAtDesc("999L"))
             .thenReturn(new ArrayList<>());
 
         // Act
-        List<OrderResponse> result = orderService.getOrdersByUserId(999L);
+        List<OrderResponse> result = orderService.getOrdersByUserId("999L");
 
         // Assert
         assertNotNull(result);
         assertEquals(0, result.size());
-        verify(orderRepository, times(1)).findByUserIdOrderByCreatedAtDesc(999L);
+        verify(orderRepository, times(1)).findByUserIdOrderByCreatedAtDesc("999L");
     }
 
     @Test
     @DisplayName("Should return orders ordered by created date descending")
     void testGetOrdersByUserId_OrderedByDate() {
         // Arrange
-        Order order1 = createOrder(1L, 100L, "100.00");
+        Order order1 = createOrder(1L, "100L", "100.00");
         order1.setCreatedAt(LocalDateTime.now().minusDays(2));
         
-        Order order2 = createOrder(2L, 100L, "200.00");
+        Order order2 = createOrder(2L, "100L", "200.00");
         order2.setCreatedAt(LocalDateTime.now().minusDays(1));
         
         List<Order> orders = Arrays.asList(order2, order1);
         
-        when(orderRepository.findByUserIdOrderByCreatedAtDesc(100L)).thenReturn(orders);
+        when(orderRepository.findByUserIdOrderByCreatedAtDesc("100L")).thenReturn(orders);
 
         // Act
-        List<OrderResponse> result = orderService.getOrdersByUserId(100L);
+        List<OrderResponse> result = orderService.getOrdersByUserId("100L");
 
         // Assert
         assertEquals(2, result.size());
         assertEquals(2L, result.get(0).getId());
         assertEquals(1L, result.get(1).getId());
-        verify(orderRepository, times(1)).findByUserIdOrderByCreatedAtDesc(100L);
+        verify(orderRepository, times(1)).findByUserIdOrderByCreatedAtDesc("100L");
     }
 
     // Test: Payment Processing
@@ -461,7 +461,7 @@ class OrderServiceTest {
     }
 
     // Helper Methods
-    private Order createOrder(Long id, Long userId, String amount) {
+    private Order createOrder(Long id, String userId, String amount) {
         Order order = new Order();
         order.setId(id);
         order.setUserId(userId);

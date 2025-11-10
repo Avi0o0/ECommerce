@@ -36,13 +36,13 @@ class NotificationServiceTest {
 
     @BeforeEach
     void setUp() {
-        testNotification = new Notification(1L, "Test message", "TEST_TYPE");
+        testNotification = new Notification("1L", "Test message", "TEST_TYPE");
         testNotification.setId(1L);
         testNotification.setStatus("SENT");
         testNotification.setCreatedAt(LocalDateTime.now());
 
         testRequest = new NotificationRequest();
-        testRequest.setUserId(1L);
+        testRequest.setUserId("1L");
         testRequest.setMessage("Test message");
         testRequest.setType("TEST_TYPE");
     }
@@ -94,21 +94,21 @@ class NotificationServiceTest {
     @Test
     void shouldGetUserNotifications() {
         // Arrange
-        Notification notification1 = new Notification(1L, "First message", "TEST_TYPE");
+        Notification notification1 = new Notification("1L", "First message", "TEST_TYPE");
         notification1.setId(1L);
         notification1.setStatus("SENT");
         notification1.setCreatedAt(LocalDateTime.now().minusHours(1));
 
-        Notification notification2 = new Notification(1L, "Second message", "TEST_TYPE");
+        Notification notification2 = new Notification("1L", "Second message", "TEST_TYPE");
         notification2.setId(2L);
         notification2.setStatus("SENT");
         notification2.setCreatedAt(LocalDateTime.now());
 
         List<Notification> notifications = Arrays.asList(notification1, notification2);
-        when(notificationRepository.findByUserIdOrderByCreatedAtDesc(1L)).thenReturn(notifications);
+        when(notificationRepository.findByUserIdOrderByCreatedAtDesc("1L")).thenReturn(notifications);
 
         // Act
-        List<NotificationResponse> responses = notificationService.getUserNotifications(1L);
+        List<NotificationResponse> responses = notificationService.getUserNotifications("1L");
 
         // Assert
         assertThat(responses).hasSize(2);
@@ -119,10 +119,10 @@ class NotificationServiceTest {
     @Test
     void shouldReturnEmptyListWhenNoNotificationsFoundForUser() {
         // Arrange
-        when(notificationRepository.findByUserIdOrderByCreatedAtDesc(999L)).thenReturn(List.of());
+        when(notificationRepository.findByUserIdOrderByCreatedAtDesc("999L")).thenReturn(List.of());
 
         // Act
-        List<NotificationResponse> responses = notificationService.getUserNotifications(999L);
+        List<NotificationResponse> responses = notificationService.getUserNotifications("999L");
 
         // Assert
         assertThat(responses).isEmpty();

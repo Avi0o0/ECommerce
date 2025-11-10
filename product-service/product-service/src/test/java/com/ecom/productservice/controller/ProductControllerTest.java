@@ -4,12 +4,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -18,18 +18,19 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.ecom.productservice.dto.ProductRequest;
 import com.ecom.productservice.dto.ProductResponse;
-import com.ecom.productservice.service.AuthenticationService;
 import com.ecom.productservice.service.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jwt.util.service.AuthService;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -41,24 +42,21 @@ class ProductControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @Mock
     private ProductService productService;
-
-    @MockBean
-    private AuthenticationService authenticationService;
-
+    
     private ProductRequest productRequest;
     private ProductResponse productResponse;
     private String authHeader;
 
     @BeforeEach
     void setUp() {
-        productRequest = new ProductRequest();
-        productRequest.setName("Test Product");
-        productRequest.setDescription("Test Description");
-        productRequest.setPrice(new BigDecimal("99.99"));
-        productRequest.setStockKeepingUnit("TEST-123");
-        productRequest.setStockQuantity(10);
+//        productRequest = new ProductRequest();
+//        productRequest.setName("Test Product");
+//        productRequest.setDescription("Test Description");
+//        productRequest.setPrice(new BigDecimal("99.99"));
+//        productRequest.setStockKeepingUnit("TEST-123");
+//        productRequest.setStockQuantity(10);
 
         productResponse = new ProductResponse();
         productResponse.setId(1L);
@@ -97,7 +95,7 @@ class ProductControllerTest {
     @Test
     @DisplayName("Should create product successfully when admin")
     void shouldCreateProduct_whenAdmin() throws Exception {
-        when(authenticationService.isAdmin(authHeader)).thenReturn(true);
+        when(AuthService.isAdmin(authHeader)).thenReturn(true);
         when(productService.createProduct(any())).thenReturn(productResponse);
 
         mockMvc.perform(post("/products")
@@ -121,7 +119,7 @@ class ProductControllerTest {
     @Test
     @DisplayName("Should return forbidden when not admin")
     void shouldReturnForbidden_whenNotAdmin() throws Exception {
-        when(authenticationService.isAdmin(authHeader)).thenReturn(false);
+        when(AuthService.isAdmin(authHeader)).thenReturn(false);
 
         mockMvc.perform(post("/products")
                 .header("Authorization", authHeader)
@@ -133,7 +131,7 @@ class ProductControllerTest {
     @Test
     @DisplayName("Should update product successfully when admin")
     void shouldUpdateProduct_whenAdmin() throws Exception {
-        when(authenticationService.isAdmin(authHeader)).thenReturn(true);
+        when(AuthService.isAdmin(authHeader)).thenReturn(true);
         when(productService.updateProduct(anyLong(), any())).thenReturn(productResponse);
 
         mockMvc.perform(put("/products/1")
@@ -148,7 +146,7 @@ class ProductControllerTest {
     @Test
     @DisplayName("Should delete product successfully when admin")
     void shouldDeleteProduct_whenAdmin() throws Exception {
-        when(authenticationService.isAdmin(authHeader)).thenReturn(true);
+        when(AuthService.isAdmin(authHeader)).thenReturn(true);
 
         mockMvc.perform(delete("/products/1")
                 .header("Authorization", authHeader))
@@ -168,7 +166,7 @@ class ProductControllerTest {
     @Test
     @DisplayName("Should add stock successfully when admin")
     void shouldAddStock_whenAdmin() throws Exception {
-        when(authenticationService.isAdmin(authHeader)).thenReturn(true);
+        when(AuthService.isAdmin(authHeader)).thenReturn(true);
         when(productService.addStock(anyString(), any())).thenReturn(productResponse);
 
         mockMvc.perform(put("/products/TEST-123/stock/add")
@@ -181,7 +179,7 @@ class ProductControllerTest {
     @Test
     @DisplayName("Should reduce stock successfully when admin")
     void shouldReduceStock_whenAdmin() throws Exception {
-        when(authenticationService.isAdmin(authHeader)).thenReturn(true);
+        when(AuthService.isAdmin(authHeader)).thenReturn(true);
         when(productService.reduceStock(anyString(), any())).thenReturn(productResponse);
 
         mockMvc.perform(put("/products/TEST-123/stock/reduce")

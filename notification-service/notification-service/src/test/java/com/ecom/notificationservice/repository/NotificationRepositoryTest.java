@@ -28,7 +28,7 @@ class NotificationRepositoryTest {
     @Test
     void shouldSaveNotification() {
         // Arrange
-        Notification notification = new Notification(1L, "Test message", "TEST_TYPE");
+        Notification notification = new Notification("1L", "Test message", "TEST_TYPE");
         notification.setStatus("SENT");
 
         // Act
@@ -46,15 +46,15 @@ class NotificationRepositoryTest {
     @Test
     void shouldFindNotificationsByUserIdOrderedByCreatedAt() {
         // Arrange
-        Notification notification1 = new Notification(1L, "First message", "TEST_TYPE");
+        Notification notification1 = new Notification("1L", "First message", "TEST_TYPE");
         notification1.setStatus("SENT");
         notification1.setCreatedAt(LocalDateTime.now().minusHours(1));
 
-        Notification notification2 = new Notification(1L, "Second message", "TEST_TYPE");
+        Notification notification2 = new Notification("1L", "Second message", "TEST_TYPE");
         notification2.setStatus("SENT");
         notification2.setCreatedAt(LocalDateTime.now());
 
-        Notification notification3 = new Notification(2L, "Other user message", "TEST_TYPE");
+        Notification notification3 = new Notification("2L", "Other user message", "TEST_TYPE");
         notification3.setStatus("SENT");
         notification3.setCreatedAt(LocalDateTime.now());
 
@@ -64,7 +64,7 @@ class NotificationRepositoryTest {
         entityManager.flush();
 
         // Act
-        List<Notification> userNotifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(1L);
+        List<Notification> userNotifications = notificationRepository.findByUserIdOrderByCreatedAtDesc("1L");
 
         // Assert
         assertThat(userNotifications).hasSize(2);
@@ -75,7 +75,7 @@ class NotificationRepositoryTest {
     @Test
     void shouldReturnEmptyListWhenNoNotificationsFound() {
         // Act
-        List<Notification> userNotifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(999L);
+        List<Notification> userNotifications = notificationRepository.findByUserIdOrderByCreatedAtDesc("999L");
 
         // Assert
         assertThat(userNotifications).isEmpty();

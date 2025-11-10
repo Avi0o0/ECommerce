@@ -26,11 +26,11 @@ import com.ecom.productservice.dto.ProductResponse;
 import com.ecom.productservice.dto.RateRequest;
 import com.ecom.productservice.dto.SuccessResponse;
 import com.ecom.productservice.exception.ProductNotFoundException;
-import com.ecom.productservice.service.AuthenticationService;
 import com.ecom.productservice.service.ProductService;
 
 import jakarta.validation.Valid;
 import jwt.util.JwtTokenUtil;
+import jwt.util.service.AuthService;
 
 @RestController
 @RequestMapping("/products")
@@ -38,11 +38,9 @@ public class ProductController {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProductController.class);
 	private final ProductService productService;
-	private final AuthenticationService authenticationService;
 
-	public ProductController(ProductService productService, AuthenticationService authenticationService) {
+	public ProductController(ProductService productService) {
 		this.productService = productService;
-		this.authenticationService = authenticationService;
 	}
 
 	@GetMapping
@@ -53,9 +51,9 @@ public class ProductController {
 			logger.info("Search request with keyword: {}", keyword);
 			// store search history if user is authenticated
 			try {
-				if (authHeader != null && authenticationService.isUser(authHeader)) {
-					UUID userId = authenticationService.getUserId(authHeader);
-					productService.updateSearchHistory(userId, keyword);
+				if (authHeader != null && AuthService.isUser(authHeader)) {
+					UUID userId = AuthService.getUserId(authHeader);
+					productService.updateSearchHistory(userId.toString(), keyword);
 				}
 			} catch (Exception e) {
 				logger.warn("Failed to record search history: {}", e.getMessage());
@@ -71,10 +69,11 @@ public class ProductController {
 
 	@GetMapping("/recent/{userID}")
 	public ResponseEntity<List<ProductResponse>> getRecentProductsForUser(
-			@RequestParam(required = false, defaultValue = "3") Integer limit, @PathVariable UUID userID) {
+			@RequestParam(required = false, defaultValue = "3") Integer limit, @PathVariable String userID) {
 		logger.info("GET /products/recent/{} - Getting recent products based on search history", userID);
 
-		List<ProductResponse> products = productService.getRecentProductsForUser(userID, 3);
+		UUID userId = validateUserID(userID);
+		List<ProductResponse> products = productService.getRecentProductsForUser(userId, 3);
 		return ResponseEntity.ok(products);
 	}
 
@@ -86,11 +85,13 @@ public class ProductController {
 	}
 
 	@PostMapping("/{productId}/buy-now")
-	public ResponseEntity<Object> buyNow(@PathVariable Long productId, @RequestParam UUID userId,
+	public ResponseEntity<Object> buyNow(@PathVariable Long productId, @RequestParam String userId,
 			@RequestParam Integer quantity, @RequestParam String paymentMethod,
 			@RequestHeader(value = "Authorization", required = false) String authHeader) {
 		logger.info("POST /products/{}/buy-now - User: {}, Quantity: {}, Payment: {}", productId, userId, quantity,
 				paymentMethod);
+		
+		UUID userID = validateUserID(userId);
 
 		if (authHeader == null) {
 			logger.warn(ProductServiceConstants.LOG_NO_AUTHORIZATION_HEADER);
@@ -101,7 +102,7 @@ public class ProductController {
 		}
 
 		// Check if user is authenticated and has USER role
-		if (!authenticationService.isUser(authHeader)) {
+		if (!AuthService.isUser(authHeader)) {
 			logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_USER_NO_USER_ROLE);
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
 					.body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(),
@@ -110,15 +111,15 @@ public class ProductController {
 		}
 
 		// Check if user is buying for themselves
-		UUID tokenUserId = authenticationService.getUserId(authHeader);
-		if (tokenUserId == null || userId.equals(tokenUserId)) {
+		UUID tokenUserId = AuthService.getUserId(authHeader);
+		if (tokenUserId == null || !userID.equals(tokenUserId)) {
 			logger.warn("User {} cannot buy for user {}", tokenUserId, userId);
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
 					.body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(),
 							"You can only buy products for yourself", "You can only buy products for yourself"));
 		}
 
-		OrderResponse order = productService.buyNow(userId, productId, quantity, paymentMethod, authHeader);
+		OrderResponse order = productService.buyNow(userID, productId, quantity, paymentMethod, authHeader);
 		return ResponseEntity.status(HttpStatus.CREATED).body(order);
 	}
 
@@ -135,7 +136,7 @@ public class ProductController {
 							ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
 		}
 
-		if (!authenticationService.isAdmin(authHeader)) {
+		if (!AuthService.isAdmin(authHeader)) {
 			logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
 					.body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(),
@@ -160,7 +161,7 @@ public class ProductController {
 							ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
 		}
 
-		if (!authenticationService.isAdmin(authHeader)) {
+		if (!AuthService.isAdmin(authHeader)) {
 			logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
 					.body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(),
@@ -185,7 +186,7 @@ public class ProductController {
 							ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
 		}
 
-		if (!authenticationService.isAdmin(authHeader)) {
+		if (!AuthService.isAdmin(authHeader)) {
 			logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
 					.body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(),
@@ -219,7 +220,7 @@ public class ProductController {
 							ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
 		}
 
-		if (!authenticationService.isAdmin(authHeader)) {
+		if (!AuthService.isAdmin(authHeader)) {
 			logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
 					.body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(),
@@ -244,7 +245,7 @@ public class ProductController {
 							ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
 		}
 
-		if (!authenticationService.isAdmin(authHeader)) {
+		if (!AuthService.isAdmin(authHeader)) {
 			logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
 					.body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(),
@@ -276,30 +277,32 @@ public class ProductController {
 
 		try {
 			logger.info("authentication check");
-			JwtTokenUtil jwtTokenUtil = new JwtTokenUtil();
-			if (authHeader != null && authenticationService.isUser(authHeader)) {
+			if (authHeader != null && AuthService.isUser(authHeader)) {
 				logger.info("authheader present");
 				 String token = authHeader.startsWith(ProductServiceConstants.BEARER_PREFIX) ? 
 						 authHeader.substring(ProductServiceConstants.BEARER_TOKEN_START_INDEX) : authHeader;
-				System.out.println(jwtTokenUtil.isTokenValid(token));
-				System.out.println(jwtTokenUtil.extractUsername(token));
-				logger.info("Current token is {}, and has usernmae : {}", jwtTokenUtil.isTokenValid(token), jwtTokenUtil.extractUsername(token));
-				UUID userId = authenticationService.getUserId(authHeader);
+				 
+				logger.info("Current token is {}, and has usernmae : {}", JwtTokenUtil.isTokenValid(token), JwtTokenUtil.extractUsername(token));
+				UUID userId = AuthService.getUserId(authHeader);
 				rateRequest.setUserId(userId.toString());
 				SuccessResponse successResponse = productService.rateProduct(rateRequest);
 				return ResponseEntity.ok(successResponse);
 			}
-//			if (authHeader != null && authenticationService.isUser(authHeader)) {
-//				UUID userId = authenticationService.getUserId(authHeader);
-//				rateRequest.setUserId(userId.toString());
-//				SuccessResponse successResponse = productService.rateProduct(rateRequest);
-//				return ResponseEntity.ok(successResponse);
-//			}
 		} catch (Exception e) {
 			logger.warn("Failed to record search history: {}", e.getMessage());
 		}
 
 		SuccessResponse successResponse = productService.rateProduct(rateRequest);
 		return ResponseEntity.ok(successResponse);
+	}
+	
+	public UUID validateUserID(String id) {
+		UUID userId = null;
+		try {
+			userId = UUID.fromString(id);
+		} catch (Exception e) {
+			throw new IllegalArgumentException("Invalid ID");
+		}
+		return userId;
 	}
 }

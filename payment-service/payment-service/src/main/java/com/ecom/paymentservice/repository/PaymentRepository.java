@@ -25,12 +25,12 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     /**
      * Find payments by user ID
      */
-    List<Payment> findByUserIdOrderByCreatedAtDesc(Long userId);
+    List<Payment> findByUserIdOrderByCreatedAtDesc(String userId);
     
     /**
      * Find payments by user ID with pagination
      */
-    Page<Payment> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    Page<Payment> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
     
     /**
      * Find payments by status
@@ -40,7 +40,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     /**
      * Find payments by user ID and status
      */
-    List<Payment> findByUserIdAndPaymentStatusOrderByCreatedAtDesc(Long userId, PaymentStatus paymentStatus);
+    List<Payment> findByUserIdAndPaymentStatusOrderByCreatedAtDesc(String userId, PaymentStatus paymentStatus);
     
     /**
      * Find payment by transaction ID
@@ -50,7 +50,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     /**
      * Find payments by order ID and user ID (for security)
      */
-    Optional<Payment> findByOrderIdAndUserId(Long orderId, Long userId);
+    Optional<Payment> findByOrderIdAndUserId(Long orderId, String userId);
     
     /**
      * Find payments created between two dates
@@ -63,14 +63,14 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
      * Find payments by user ID created between two dates
      */
     @Query("SELECT p FROM Payment p WHERE p.userId = :userId AND p.createdAt BETWEEN :startDate AND :endDate ORDER BY p.createdAt DESC")
-    List<Payment> findPaymentsByUserBetweenDates(@Param("userId") Long userId,
+    List<Payment> findPaymentsByUserBetweenDates(@Param("userId") String userId,
                                                @Param("startDate") LocalDateTime startDate, 
                                                @Param("endDate") LocalDateTime endDate);
     
     /**
      * Count payments by user ID
      */
-    long countByUserId(Long userId);
+    long countByUserId(String userId);
     
     /**
      * Count payments by status
@@ -98,5 +98,5 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
      * Calculate total amount paid by user
      */
     @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payment p WHERE p.userId = :userId AND p.paymentStatus = 'SUCCESS'")
-    BigDecimal calculateTotalAmountPaidByUser(@Param("userId") Long userId);
+    BigDecimal calculateTotalAmountPaidByUser(@Param("userId") String userId);
 }

@@ -61,7 +61,7 @@ class OrderRepositoryTest {
     void shouldSaveOrderWithItems() {
         // Given
         Order order = new Order();
-        order.setUserId(1L);
+        order.setUserId("1L");
         order.setTotalAmount(new BigDecimal("199.98"));
         order.setOrderStatus(OrderStatus.PENDING);
         order.setPaymentStatus("PENDING");
@@ -94,7 +94,7 @@ class OrderRepositoryTest {
     void shouldFindOrdersByUserId() {
         // Given
         Order order1 = new Order();
-        order1.setUserId(1L);
+        order1.setUserId("1L");
         order1.setTotalAmount(new BigDecimal("199.98"));
         order1.setOrderStatus(OrderStatus.PENDING);
         order1.setPaymentStatus("PENDING");
@@ -102,7 +102,7 @@ class OrderRepositoryTest {
         entityManager.persist(order1);
 
         Order order2 = new Order();
-        order2.setUserId(1L);
+        order2.setUserId("1L");
         order2.setTotalAmount(new BigDecimal("299.99"));
         order2.setOrderStatus(OrderStatus.COMPLETED);
         order2.setPaymentStatus("SUCCESS");
@@ -111,7 +111,7 @@ class OrderRepositoryTest {
         entityManager.flush();
 
         // When
-        List<Order> found = orderRepository.findByUserIdOrderByCreatedAtDesc(1L);
+        List<Order> found = orderRepository.findByUserIdOrderByCreatedAtDesc("1L");
 
         // Then
         assertEquals(2, found.size());
@@ -124,7 +124,7 @@ class OrderRepositoryTest {
     void shouldFindOrderByIdAndUserId() {
         // Given
         Order order = new Order();
-        order.setUserId(1L);
+        order.setUserId("1L");
         order.setTotalAmount(new BigDecimal("199.98"));
         order.setOrderStatus(OrderStatus.PENDING);
         order.setPaymentStatus("PENDING");
@@ -133,7 +133,7 @@ class OrderRepositoryTest {
         entityManager.flush();
 
         // When
-        Optional<Order> found = orderRepository.findByIdAndUserId(order.getId(), 1L);
+        Optional<Order> found = orderRepository.findByIdAndUserId(order.getId(), "1L");
 
         // Then
         assertTrue(found.isPresent());
@@ -145,7 +145,7 @@ class OrderRepositoryTest {
     void shouldUpdateOrderStatus() {
         // Given
         Order order = new Order();
-        order.setUserId(1L);
+        order.setUserId("1L");
         order.setTotalAmount(new BigDecimal("199.98"));
         order.setOrderStatus(OrderStatus.PENDING);
         order.setPaymentStatus("PENDING");
@@ -171,7 +171,7 @@ class OrderRepositoryTest {
     void shouldCascadeDeleteOrderItems() {
         // Given
         Order order = new Order();
-        order.setUserId(1L);
+        order.setUserId("1L");
         order.setTotalAmount(new BigDecimal("199.98"));
         order.setOrderStatus(OrderStatus.PENDING);
         order.setPaymentStatus("PENDING");
@@ -212,7 +212,7 @@ class OrderRepositoryTest {
 
         // Given
         Order order1 = new Order();
-        order1.setUserId(1L);
+        order1.setUserId("1L");
         order1.setTotalAmount(new BigDecimal("199.98"));
         order1.setOrderStatus(OrderStatus.COMPLETED);
         order1.setPaymentStatus("SUCCESS");
@@ -220,7 +220,7 @@ class OrderRepositoryTest {
         entityManager.persist(order1);
 
         Order order2 = new Order();
-        order2.setUserId(2L);
+        order2.setUserId("2L");
         order2.setTotalAmount(new BigDecimal("299.99"));
         order2.setOrderStatus(OrderStatus.PENDING);
         order2.setPaymentStatus("PENDING");
@@ -249,7 +249,7 @@ class OrderRepositoryTest {
         LocalDateTime lastWeek = LocalDateTime.now().minusWeeks(1);
 
         Order oldOrder = new Order();
-        oldOrder.setUserId(1L);
+        oldOrder.setUserId("1L");
         oldOrder.setTotalAmount(new BigDecimal("199.98"));
         oldOrder.setOrderStatus(OrderStatus.COMPLETED);
         oldOrder.setPaymentStatus("SUCCESS");
@@ -257,7 +257,7 @@ class OrderRepositoryTest {
         entityManager.persist(oldOrder);
 
         Order recentOrder = new Order();
-        recentOrder.setUserId(1L);
+        recentOrder.setUserId("1L");
         recentOrder.setTotalAmount(new BigDecimal("299.99"));
         recentOrder.setOrderStatus(OrderStatus.COMPLETED);
         recentOrder.setPaymentStatus("SUCCESS");
@@ -284,7 +284,7 @@ class OrderRepositoryTest {
         LocalDateTime cutoff = LocalDateTime.now().minusHours(24);
         
         Order oldPendingOrder = new Order();
-        oldPendingOrder.setUserId(1L);
+        oldPendingOrder.setUserId("1L");
         oldPendingOrder.setTotalAmount(new BigDecimal("199.98"));
         oldPendingOrder.setOrderStatus(OrderStatus.PENDING);
         oldPendingOrder.setPaymentStatus("PENDING");
@@ -292,7 +292,7 @@ class OrderRepositoryTest {
         entityManager.persist(oldPendingOrder);
 
         Order recentPendingOrder = new Order();
-        recentPendingOrder.setUserId(1L);
+        recentPendingOrder.setUserId("1L");
         recentPendingOrder.setTotalAmount(new BigDecimal("299.99"));
         recentPendingOrder.setOrderStatus(OrderStatus.PENDING);
         recentPendingOrder.setPaymentStatus("PENDING");

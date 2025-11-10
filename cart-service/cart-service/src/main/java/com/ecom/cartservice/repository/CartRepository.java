@@ -1,5 +1,6 @@
 package com.ecom.cartservice.repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,17 +14,17 @@ import com.ecom.cartservice.entity.Cart;
 @Repository
 public interface CartRepository extends JpaRepository<Cart, Long> {
 
-    Optional<Cart> findByUserId(Long userId);
+    Optional<Cart> findByUserId(String userId);
 
-    boolean existsByUserId(Long userId);
+    boolean existsByUserId(String userId);
 
-    List<Cart> findAllByUserId(Long userId);
+    List<Cart> findAllByUserId(String userId);
 
-    void deleteByUserId(Long userId);
+    void deleteByUserId(String userId);
 
     @Query("SELECT COALESCE(SUM(ci.quantity), 0) FROM Cart c JOIN c.cartItems ci WHERE c.userId = :userId")
-    int countTotalItemsByUserId(@Param("userId") Long userId);
+    int countTotalItemsByUserId(@Param("userId") String userId);
 
     @Query("SELECT COALESCE(SUM(ci.priceAtAddition * ci.quantity), 0) FROM Cart c JOIN c.cartItems ci WHERE c.userId = :userId")
-    java.math.BigDecimal calculateTotalPriceByUserId(@Param("userId") Long userId);
+    BigDecimal calculateTotalPriceByUserId(@Param("userId") String userId);
 }

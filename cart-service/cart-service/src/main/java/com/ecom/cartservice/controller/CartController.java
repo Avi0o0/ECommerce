@@ -23,6 +23,7 @@ import com.ecom.cartservice.dto.GlobalErrorResponse;
 import com.ecom.cartservice.service.AuthenticationService;
 import com.ecom.cartservice.service.CartService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -39,7 +40,7 @@ public class CartController {
     }
 
     @GetMapping
-    public ResponseEntity<Object> getCart(@RequestParam Long userId, 
+    public ResponseEntity<Object> getCart(HttpServletRequest request, @RequestParam String userId, 
                                    @RequestHeader(value = "Authorization", required = false) String authHeader) {
         logger.info(CartServiceConstants.LOG_GET_CART_REQUEST, userId);
         
@@ -49,12 +50,8 @@ public class CartController {
                     .body(new GlobalErrorResponse(HttpStatus.UNAUTHORIZED.value(), CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE, CartServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
         }
         
-        // Check if user is admin or the same user
-        boolean isAdmin = authenticationService.isAdmin(authHeader);
-        Long tokenUserId = authenticationService.getUserId(authHeader);
-        
-        if (!isAdmin && (tokenUserId == null || !userId.equals(tokenUserId))) {
-            logger.warn(CartServiceConstants.LOG_ACCESS_DENIED_USER_CANNOT_ACCESS_CART, tokenUserId, userId);
+        if(Boolean.TRUE.equals(request.getAttribute("isAdmin"))) {
+        	logger.warn(CartServiceConstants.LOG_ACCESS_DENIED_USER_CANNOT_ACCESS_CART, "ADMIN", userId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new SuccessResponse(HttpStatus.FORBIDDEN.value(), CartServiceConstants.ACCESS_DENIED_MESSAGE));
         }
@@ -64,8 +61,8 @@ public class CartController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Object> addToCart(@Valid @RequestBody AddToCartRequest request, 
-                                     @RequestParam Long userId,
+    public ResponseEntity<Object> addToCart(HttpServletRequest servletRequest, @Valid @RequestBody AddToCartRequest request, 
+                                     @RequestParam String userId,
                                      @RequestHeader(value = "Authorization", required = false) String authHeader) {
         logger.info(CartServiceConstants.LOG_POST_ADD_TO_CART_REQUEST, request.getProductId(), userId);
         
@@ -76,14 +73,14 @@ public class CartController {
         }
         
         // Check if user is authenticated and has USER role
-        if (!authenticationService.isUser(authHeader)) {
+        if (Boolean.FALSE.equals(servletRequest.getAttribute("isUser"))) {
             logger.warn(CartServiceConstants.LOG_ACCESS_DENIED_USER_NO_USER_ROLE);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(), CartServiceConstants.USER_ROLE_REQUIRED_MESSAGE, CartServiceConstants.USER_ROLE_REQUIRED_MESSAGE));
         }
         
         // Check if user is adding to their own cart
-        Long tokenUserId = authenticationService.getUserId(authHeader);
+        String tokenUserId = authenticationService.getUserId(authHeader);
         if (tokenUserId == null || !userId.equals(tokenUserId)) {
             logger.warn(CartServiceConstants.LOG_ACCESS_DENIED_USER_CANNOT_ADD_TO_CART, tokenUserId, userId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -96,7 +93,7 @@ public class CartController {
 
     @DeleteMapping("/remove/{productId}")
     public ResponseEntity<Object> removeFromCart(@PathVariable Long productId, 
-                                         @RequestParam Long userId,
+                                         @RequestParam String userId,
                                          @RequestHeader(value = "Authorization", required = false) String authHeader) {
         logger.info(CartServiceConstants.LOG_DELETE_REMOVE_FROM_CART_REQUEST, productId, userId);
         
@@ -114,7 +111,7 @@ public class CartController {
         }
         
         // Check if user is removing from their own cart
-        Long tokenUserId = authenticationService.getUserId(authHeader);
+        String tokenUserId = authenticationService.getUserId(authHeader);
         if (tokenUserId == null || !userId.equals(tokenUserId)) {
             logger.warn(CartServiceConstants.LOG_ACCESS_DENIED_USER_CANNOT_REMOVE_FROM_CART, tokenUserId, userId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -126,7 +123,7 @@ public class CartController {
     }
 
     @DeleteMapping("/clear")
-    public ResponseEntity<Object> clearCart(@RequestParam Long userId,
+    public ResponseEntity<Object> clearCart(@RequestParam String userId,
                                      @RequestHeader(value = "Authorization", required = false) String authHeader) {
         logger.info(CartServiceConstants.LOG_DELETE_CLEAR_CART_REQUEST, userId);
         
@@ -144,7 +141,7 @@ public class CartController {
         }
         
         // Check if user is clearing their own cart
-        Long tokenUserId = authenticationService.getUserId(authHeader);
+        String tokenUserId = authenticationService.getUserId(authHeader);
         if (tokenUserId == null || !userId.equals(tokenUserId)) {
             logger.warn(CartServiceConstants.LOG_ACCESS_DENIED_USER_CANNOT_CLEAR_CART, tokenUserId, userId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -157,7 +154,7 @@ public class CartController {
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<Object> checkout(@RequestParam Long userId,
+    public ResponseEntity<Object> checkout(@RequestParam String userId,
                                     @RequestParam String paymentMethod,
                                     @RequestHeader(value = "Authorization", required = false) String authHeader) {
         logger.info(CartServiceConstants.LOG_POST_CHECKOUT_REQUEST, userId);
@@ -176,7 +173,7 @@ public class CartController {
         }
         
         // Check if user is checking out their own cart
-        Long tokenUserId = authenticationService.getUserId(authHeader);
+        String tokenUserId = authenticationService.getUserId(authHeader);
         if (tokenUserId == null || !userId.equals(tokenUserId)) {
             logger.warn(CartServiceConstants.LOG_ACCESS_DENIED_USER_CANNOT_CHECKOUT_CART, tokenUserId, userId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)

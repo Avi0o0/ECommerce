@@ -13,5 +13,5 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     /**
      * Find notifications by user ID ordered by creation date descending
      */
-    List<Notification> findByUserIdOrderByCreatedAtDesc(Long userId);
+    List<Notification> findByUserIdOrderByCreatedAtDesc(String userId);
 }

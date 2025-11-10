@@ -15,7 +15,7 @@ public class Order {
     private Long id;
     
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private String userId;
     
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
@@ -40,7 +40,7 @@ public class Order {
         this.paymentStatus = "PENDING";
     }
     
-    public Order(Long userId, BigDecimal totalAmount) {
+    public Order(String userId, BigDecimal totalAmount) {
         this();
         this.userId = userId;
         this.totalAmount = totalAmount;
@@ -55,11 +55,11 @@ public class Order {
         this.id = id;
     }
     
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
     
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
     

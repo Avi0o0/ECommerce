@@ -12,7 +12,7 @@ public class PaymentRequest {
     private Long orderId;
     
     @NotNull(message = "User ID is required")
-    private Long userId;
+    private String userId;
     
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
@@ -24,7 +24,7 @@ public class PaymentRequest {
     // Constructors
     public PaymentRequest() {}
     
-    public PaymentRequest(Long orderId, Long userId, BigDecimal amount, String paymentMethod) {
+    public PaymentRequest(Long orderId, String userId, BigDecimal amount, String paymentMethod) {
         this.orderId = orderId;
         this.userId = userId;
         this.amount = amount;
@@ -40,11 +40,11 @@ public class PaymentRequest {
         this.orderId = orderId;
     }
     
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
     
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
     

@@ -10,7 +10,7 @@ import jakarta.validation.constraints.NotNull;
 public class OrderRequest {
     
     @NotNull(message = "User ID is required")
-    private Long userId;
+    private String userId;
     
     @NotNull(message = "Total amount is required")
     @DecimalMin(value = "0.01", message = "Total amount must be greater than 0")
@@ -25,7 +25,7 @@ public class OrderRequest {
     // Constructors
     public OrderRequest() {}
     
-    public OrderRequest(Long userId, BigDecimal totalAmount, String paymentMethod, List<OrderItemRequest> orderItems) {
+    public OrderRequest(String userId, BigDecimal totalAmount, String paymentMethod, List<OrderItemRequest> orderItems) {
         this.userId = userId;
         this.totalAmount = totalAmount;
         this.paymentMethod = paymentMethod;
@@ -33,11 +33,11 @@ public class OrderRequest {
     }
     
     // Getters and Setters
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
     
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
     

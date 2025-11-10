@@ -28,6 +28,8 @@
 		<url />
 	</scm>
 	<properties>
+		<jwtlibakshat-systemPath>
+			D:\Eclipse\Workspace\Assessment\product-service\product-service/libs/jwtlib_akshat_1.0.jar</jwtlibakshat-systemPath>
 		<java.version>17</java.version>
 		<spring-cloud.version>2025.0.0</spring-cloud.version>
 	</properties>
@@ -103,6 +105,12 @@
 			<version>0.11.5</version>
 			<scope>runtime</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.akshat.jwt</groupId>
+			<artifactId>jwtlib-akshat</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>

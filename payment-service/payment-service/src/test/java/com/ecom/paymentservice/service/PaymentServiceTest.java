@@ -48,14 +48,14 @@ class PaymentServiceTest {
     void setUp() {
         paymentRequest = new PaymentRequest();
         paymentRequest.setOrderId(1L);
-        paymentRequest.setUserId(100L);
+        paymentRequest.setUserId("100L");
         paymentRequest.setAmount(new BigDecimal("299.99"));
         paymentRequest.setPaymentMethod("CREDIT_CARD");
 
         savedPayment = new Payment();
         savedPayment.setId(1L);
         savedPayment.setOrderId(1L);
-        savedPayment.setUserId(100L);
+        savedPayment.setUserId("100L");
         savedPayment.setAmount(new BigDecimal("299.99"));
         savedPayment.setPaymentMethod("CREDIT_CARD");
         savedPayment.setPaymentStatus(PaymentStatus.SUCCESS);
@@ -189,60 +189,60 @@ class PaymentServiceTest {
     @DisplayName("Should return all payments for a user")
     void testGetPaymentsByUserId_Success() {
         // Arrange
-        Payment payment1 = createPayment(1L, 100L, "100.00");
-        Payment payment2 = createPayment(2L, 100L, "200.00");
+        Payment payment1 = createPayment(1L, "100L", "100.00");
+        Payment payment2 = createPayment(2L, "100L", "200.00");
         List<Payment> payments = Arrays.asList(payment1, payment2);
         
-        when(paymentRepository.findByUserIdOrderByCreatedAtDesc(100L)).thenReturn(payments);
+        when(paymentRepository.findByUserIdOrderByCreatedAtDesc("100L")).thenReturn(payments);
 
         // Act
-        List<PaymentResponse> result = paymentService.getPaymentsByUserId(100L);
+        List<PaymentResponse> result = paymentService.getPaymentsByUserId("100L");
 
         // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(1L, result.get(0).getId());
         assertEquals(2L, result.get(1).getId());
-        verify(paymentRepository, times(1)).findByUserIdOrderByCreatedAtDesc(100L);
+        verify(paymentRepository, times(1)).findByUserIdOrderByCreatedAtDesc("100L");
     }
 
     @Test
     @DisplayName("Should return empty list when user has no payments")
     void testGetPaymentsByUserId_EmptyList() {
         // Arrange
-        when(paymentRepository.findByUserIdOrderByCreatedAtDesc(999L)).thenReturn(Arrays.asList());
+        when(paymentRepository.findByUserIdOrderByCreatedAtDesc("999L")).thenReturn(Arrays.asList());
 
         // Act
-        List<PaymentResponse> result = paymentService.getPaymentsByUserId(999L);
+        List<PaymentResponse> result = paymentService.getPaymentsByUserId("999L");
 
         // Assert
         assertNotNull(result);
         assertEquals(0, result.size());
-        verify(paymentRepository, times(1)).findByUserIdOrderByCreatedAtDesc(999L);
+        verify(paymentRepository, times(1)).findByUserIdOrderByCreatedAtDesc("999L");
     }
 
     @Test
     @DisplayName("Should return payments ordered by created date descending")
     void testGetPaymentsByUserId_OrderedByDate() {
         // Arrange
-        Payment payment1 = createPayment(1L, 100L, "100.00");
+        Payment payment1 = createPayment(1L, "100L", "100.00");
         payment1.setCreatedAt(LocalDateTime.now().minusDays(2));
         
-        Payment payment2 = createPayment(2L, 100L, "200.00");
+        Payment payment2 = createPayment(2L, "100L", "200.00");
         payment2.setCreatedAt(LocalDateTime.now().minusDays(1));
         
         List<Payment> payments = Arrays.asList(payment2, payment1); // Ordered by date DESC
         
-        when(paymentRepository.findByUserIdOrderByCreatedAtDesc(100L)).thenReturn(payments);
+        when(paymentRepository.findByUserIdOrderByCreatedAtDesc("100L")).thenReturn(payments);
 
         // Act
-        List<PaymentResponse> result = paymentService.getPaymentsByUserId(100L);
+        List<PaymentResponse> result = paymentService.getPaymentsByUserId("100L");
 
         // Assert
         assertEquals(2, result.size());
         assertEquals(2L, result.get(0).getId()); // More recent first
         assertEquals(1L, result.get(1).getId());
-        verify(paymentRepository, times(1)).findByUserIdOrderByCreatedAtDesc(100L);
+        verify(paymentRepository, times(1)).findByUserIdOrderByCreatedAtDesc("100L");
     }
 
     // Test: Payment Status Handling
@@ -311,7 +311,7 @@ class PaymentServiceTest {
     }
 
     // Helper Methods
-    private Payment createPayment(Long id, Long userId, String amount) {
+    private Payment createPayment(Long id, String userId, String amount) {
         Payment payment = new Payment();
         payment.setId(id);
         payment.setUserId(userId);

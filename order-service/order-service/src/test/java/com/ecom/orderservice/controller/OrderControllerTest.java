@@ -1,16 +1,16 @@
 package com.ecom.orderservice.controller;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
-import com.ecom.orderservice.entity.OrderStatus;
-import com.ecom.orderservice.dto.TokenValidationResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.ecom.orderservice.dto.OrderItemRequest;
 import com.ecom.orderservice.dto.OrderRequest;
 import com.ecom.orderservice.dto.OrderResponse;
+import com.ecom.orderservice.entity.OrderStatus;
 import com.ecom.orderservice.service.AuthenticationService;
 import com.ecom.orderservice.service.OrderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,14 +59,14 @@ class OrderControllerTest {
         orderItemRequest.setPrice(new BigDecimal("99.99"));
 
         orderRequest = new OrderRequest();
-        orderRequest.setUserId(1L);
+        orderRequest.setUserId("1L");
         orderRequest.setTotalAmount(new BigDecimal("199.98"));
         orderRequest.setPaymentMethod("CREDIT_CARD");
         orderRequest.setOrderItems(Arrays.asList(orderItemRequest));
 
         orderResponse = new OrderResponse();
         orderResponse.setId(1L);
-        orderResponse.setUserId(1L);
+        orderResponse.setUserId("1L");
         orderResponse.setTotalAmount(new BigDecimal("199.98"));
         orderResponse.setOrderStatus(OrderStatus.COMPLETED);
         orderResponse.setPaymentStatus("SUCCESS");
@@ -114,7 +115,7 @@ class OrderControllerTest {
         // Given
         List<OrderResponse> orders = Arrays.asList(orderResponse);
         when(authenticationService.isValidToken(authHeader)).thenReturn(true);
-        when(orderService.getOrdersByUserId(1L)).thenReturn(orders);
+        when(orderService.getOrdersByUserId("1L")).thenReturn(orders);
 
         // When/Then
         mockMvc.perform(get("/orders/user/1")

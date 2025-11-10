@@ -37,16 +37,10 @@ public class JwtService {
 
 	public String generateToken(UserDetails userDetails) {
 		Instant now = Instant.now();
-		List<String> roles = userDetails.getAuthorities().stream()
-				.map(GrantedAuthority::getAuthority)
-				.toList();
-		return Jwts.builder()
-				.setSubject(userDetails.getUsername())
-				.addClaims(Map.of("roles", roles))
-				.setIssuedAt(Date.from(now))
-				.setExpiration(Date.from(now.plusSeconds(expirationSeconds)))
-				.signWith(getSigningKey(), SignatureAlgorithm.HS256)
-				.compact();
+		List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
+		return Jwts.builder().setSubject(userDetails.getUsername()).addClaims(Map.of("roles", roles))
+				.setIssuedAt(Date.from(now)).setExpiration(Date.from(now.plusSeconds(expirationSeconds)))
+				.signWith(getSigningKey(), SignatureAlgorithm.HS256).compact();
 	}
 
 	public String extractUsername(String token) {
@@ -69,7 +63,9 @@ public class JwtService {
 	}
 
 	/**
-	 * Validates if a token is valid (not expired and properly signed) without requiring UserDetails
+	 * Validates if a token is valid (not expired and properly signed) without
+	 * requiring UserDetails
+	 * 
 	 * @param token JWT token to validate
 	 * @return true if token is valid, false otherwise
 	 */
@@ -89,10 +85,6 @@ public class JwtService {
 	}
 
 	public Claims extractAllClaims(String token) {
-		return Jwts.parserBuilder()
-				.setSigningKey(getSigningKey())
-				.build()
-				.parseClaimsJws(token)
-				.getBody();
+		return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
 	}
 }

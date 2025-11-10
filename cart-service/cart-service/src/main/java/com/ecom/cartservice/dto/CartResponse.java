@@ -7,7 +7,7 @@ import java.util.List;
 public class CartResponse {
     
     private Long id;
-    private Long userId;
+    private String userId;
     private List<CartItemResponse> items;
     private Integer totalItems;
     private BigDecimal totalPrice;
@@ -17,7 +17,7 @@ public class CartResponse {
     // Constructors
     public CartResponse() {}
     
-    public CartResponse(Long id, Long userId, List<CartItemResponse> items, Integer totalItems, 
+    public CartResponse(Long id, String userId, List<CartItemResponse> items, Integer totalItems, 
                        BigDecimal totalPrice, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
@@ -28,7 +28,7 @@ public class CartResponse {
         this.updatedAt = updatedAt;
     }
 
-    public CartResponse(Long id, Long userId, LocalDateTime createdAt, List<CartItemResponse> items) {
+    public CartResponse(Long id, String userId, LocalDateTime createdAt, List<CartItemResponse> items) {
         this.id = id;
         this.userId = userId;
         this.createdAt = createdAt;
@@ -47,11 +47,11 @@ public class CartResponse {
         this.id = id;
     }
     
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
     
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
     

@@ -103,7 +103,7 @@ public class AuthenticationService {
         }
     }
 
-    public Long getUserId(String bearerToken) {
+    public String getUserId(String bearerToken) {
         try {
             TokenValidationResponse response = validateTokenAndGetDetails(bearerToken);
             return response.isValid() ? response.getUserId() : null;

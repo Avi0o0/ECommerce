@@ -1,12 +1,13 @@
 package com.ecom.cartservice.repository;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,6 @@ class CartItemRepositoryTest {
     void shouldFindCartItemByCartIdAndProductId() {
         // Given
         Cart cart = new Cart();
-        cart.setUserId(1L);
         cart.setCreatedAt(LocalDateTime.now());
         entityManager.persist(cart);
 
@@ -60,7 +60,7 @@ class CartItemRepositoryTest {
     void shouldFindAllItemsByCartId() {
         // Given
         Cart cart = new Cart();
-        cart.setUserId(1L);
+        cart.setUserId("1L");
         cart.setCreatedAt(LocalDateTime.now());
         entityManager.persist(cart);
 
@@ -93,7 +93,7 @@ class CartItemRepositoryTest {
     void shouldDeleteAllItemsByCartId() {
         // Given
         Cart cart = new Cart();
-        cart.setUserId(1L);
+        cart.setUserId("1L");
         cart.setCreatedAt(LocalDateTime.now());
         entityManager.persist(cart);
 
@@ -127,7 +127,7 @@ class CartItemRepositoryTest {
     void shouldUpdateCartItem() {
         // Given
         Cart cart = new Cart();
-        cart.setUserId(1L);
+        cart.setUserId("1L");
         cart.setCreatedAt(LocalDateTime.now());
         entityManager.persist(cart);
 
@@ -155,7 +155,7 @@ class CartItemRepositoryTest {
     void shouldDeleteCartItem() {
         // Given
         Cart cart = new Cart();
-        cart.setUserId(1L);
+        cart.setUserId("1L");
         cart.setCreatedAt(LocalDateTime.now());
         entityManager.persist(cart);
 

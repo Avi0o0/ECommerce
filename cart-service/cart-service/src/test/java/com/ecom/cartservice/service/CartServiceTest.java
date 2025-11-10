@@ -68,7 +68,7 @@ class CartServiceTest {
         // Setup Cart
         cart = new Cart();
         cart.setId(1L);
-        cart.setUserId(1L);
+        cart.setUserId("1L");
 
         // Setup CartItem
         cartItem = new CartItem();
@@ -98,27 +98,27 @@ class CartServiceTest {
     @DisplayName("Should return cart when user has cart")
     void testGetCart_Success() {
         // Arrange
-        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(cartRepository.findByUserId("1L")).thenReturn(Optional.of(cart));
         when(productServiceClient.getProductById(100L)).thenReturn(productResponse);
 
         // Act
-        CartResponse result = cartService.getCart(1L);
+        CartResponse result = cartService.getCart("1L");
 
         // Assert
         assertNotNull(result);
-        assertEquals(1L, result.getUserId());
-        verify(cartRepository, times(1)).findByUserId(1L);
+        assertEquals("1L", result.getUserId());
+        verify(cartRepository, times(1)).findByUserId("1L");
     }
 
     @Test
     @DisplayName("Should throw CartNotFoundException when cart doesn't exist")
     void testGetCart_NotFound() {
         // Arrange
-        when(cartRepository.findByUserId(999L)).thenReturn(Optional.empty());
+        when(cartRepository.findByUserId("999L")).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(CartNotFoundException.class, () -> cartService.getCart(999L));
-        verify(cartRepository, times(1)).findByUserId(999L);
+        assertThrows(CartNotFoundException.class, () -> cartService.getCart("999L"));
+        verify(cartRepository, times(1)).findByUserId("999L");
     }
 
     // Test: Add to Cart
@@ -128,14 +128,14 @@ class CartServiceTest {
         // Arrange
         Cart emptyCart = new Cart();
         emptyCart.setId(1L);
-        emptyCart.setUserId(1L);
+        emptyCart.setUserId("1L");
 
-        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(emptyCart));
+        when(cartRepository.findByUserId("1L")).thenReturn(Optional.of(emptyCart));
         lenient().when(productServiceClient.getProductById(100L)).thenReturn(productResponse);
         when(cartItemRepository.save(any(CartItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        CartResponse result = cartService.addToCart(1L, addToCartRequest);
+        CartResponse result = cartService.addToCart("1L", addToCartRequest);
 
         // Assert
         assertNotNull(result);
@@ -146,12 +146,12 @@ class CartServiceTest {
     @DisplayName("Should update quantity for existing item in cart")
     void testAddToCart_UpdateQuantity() {
         // Arrange
-        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(cartRepository.findByUserId("1L")).thenReturn(Optional.of(cart));
         lenient().when(productServiceClient.getProductById(100L)).thenReturn(productResponse);
         when(cartItemRepository.save(any(CartItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        CartResponse result = cartService.addToCart(1L, addToCartRequest);
+        CartResponse result = cartService.addToCart("1L", addToCartRequest);
 
         // Assert
         assertNotNull(result);
@@ -162,13 +162,13 @@ class CartServiceTest {
     @DisplayName("Should throw ProductNotAvailableException when product doesn't exist")
     void testAddToCart_ProductNotFound() {
         // Arrange
-        lenient().when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(new Cart()));
+        lenient().when(cartRepository.findByUserId("1L")).thenReturn(Optional.of(new Cart()));
         lenient().when(productServiceClient.getProductById(999L)).thenReturn(null);
 
         // Act & Assert
         assertThrows(ProductNotAvailableException.class, () -> {
             addToCartRequest.setProductId(999L);
-            cartService.addToCart(1L, addToCartRequest);
+            cartService.addToCart("1L", addToCartRequest);
         });
     }
 
@@ -177,12 +177,12 @@ class CartServiceTest {
     void testAddToCart_InsufficientStock() {
         // Arrange
         productResponse.setStockQuantity(0);
-        lenient().when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(new Cart()));
+        lenient().when(cartRepository.findByUserId("1L")).thenReturn(Optional.of(new Cart()));
         lenient().when(productServiceClient.getProductById(100L)).thenReturn(productResponse);
 
         // Act & Assert
         assertThrows(ProductNotAvailableException.class, () -> 
-            cartService.addToCart(1L, addToCartRequest));
+            cartService.addToCart("1L", addToCartRequest));
     }
 
     // Test: Remove from Cart
@@ -190,11 +190,11 @@ class CartServiceTest {
     @DisplayName("Should remove item from cart successfully")
     void testRemoveFromCart_Success() {
         // Arrange
-        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(cartRepository.findByUserId("1L")).thenReturn(Optional.of(cart));
         doNothing().when(cartItemRepository).delete(any(CartItem.class));
 
         // Act
-        CartResponse result = cartService.removeFromCart(1L, 100L);
+        CartResponse result = cartService.removeFromCart("1L", 100L);
 
         // Assert
         assertNotNull(result);
@@ -205,21 +205,21 @@ class CartServiceTest {
     @DisplayName("Should throw CartNotFoundException when cart doesn't exist for removal")
     void testRemoveFromCart_CartNotFound() {
         // Arrange
-        when(cartRepository.findByUserId(999L)).thenReturn(Optional.empty());
+        when(cartRepository.findByUserId("999L")).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(CartNotFoundException.class, () -> cartService.removeFromCart(999L, 100L));
-        verify(cartRepository, times(1)).findByUserId(999L);
+        assertThrows(CartNotFoundException.class, () -> cartService.removeFromCart("999L", 100L));
+        verify(cartRepository, times(1)).findByUserId("999L");
     }
 
     @Test
     @DisplayName("Should throw CartItemNotFoundException when item doesn't exist in cart")
     void testRemoveFromCart_ItemNotFound() {
         // Arrange
-        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(cartRepository.findByUserId("1L")).thenReturn(Optional.of(cart));
 
         // Act & Assert
-        assertThrows(CartItemNotFoundException.class, () -> cartService.removeFromCart(1L, 999L));
+        assertThrows(CartItemNotFoundException.class, () -> cartService.removeFromCart("1L", 999L));
     }
 
     // Test: Clear Cart
@@ -227,12 +227,12 @@ class CartServiceTest {
     @DisplayName("Should clear cart successfully")
     void testClearCart_Success() {
         // Arrange
-        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(cartRepository.findByUserId("1L")).thenReturn(Optional.of(cart));
         doNothing().when(cartItemRepository).deleteAll(any());
         when(cartRepository.save(any(Cart.class))).thenReturn(cart);
 
         // Act
-        cartService.clearCart(1L);
+        cartService.clearCart("1L");
 
         // Assert
         verify(cartItemRepository, times(1)).deleteAll(any());
@@ -243,11 +243,11 @@ class CartServiceTest {
     @DisplayName("Should throw CartNotFoundException when clearing non-existent cart")
     void testClearCart_NotFound() {
         // Arrange
-        when(cartRepository.findByUserId(999L)).thenReturn(Optional.empty());
+        when(cartRepository.findByUserId("999L")).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(CartNotFoundException.class, () -> cartService.clearCart(999L));
-        verify(cartRepository, times(1)).findByUserId(999L);
+        assertThrows(CartNotFoundException.class, () -> cartService.clearCart("999L"));
+        verify(cartRepository, times(1)).findByUserId("999L");
     }
 
     // Test: Checkout
@@ -257,18 +257,18 @@ class CartServiceTest {
         // Arrange
         OrderResponse orderResponse = new OrderResponse();
         orderResponse.setId(1L);
-        orderResponse.setUserId(1L);
+        orderResponse.setUserId("1L");
         orderResponse.setTotalAmount(new BigDecimal("199.98"));
         orderResponse.setOrderStatus("COMPLETED");
         orderResponse.setPaymentStatus("SUCCESS");
 
-        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(cartRepository.findByUserId("1L")).thenReturn(Optional.of(cart));
         when(orderServiceClient.checkout(any(), eq("Bearer token"))).thenReturn(orderResponse);
         doNothing().when(cartItemRepository).deleteAll(any());
         when(cartRepository.save(any(Cart.class))).thenReturn(cart);
 
         // Act
-        OrderResponse result = cartService.checkout(1L, "CREDIT_CARD", "Bearer token");
+        OrderResponse result = cartService.checkout("1L", "CREDIT_CARD", "Bearer token");
 
         // Assert
         assertNotNull(result);
@@ -281,12 +281,12 @@ class CartServiceTest {
     @DisplayName("Should throw CartNotFoundException when checking out non-existent cart")
     void testCheckout_CartNotFound() {
         // Arrange
-        when(cartRepository.findByUserId(999L)).thenReturn(Optional.empty());
+        when(cartRepository.findByUserId("999L")).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThrows(CartNotFoundException.class, () -> 
-            cartService.checkout(999L, "CREDIT_CARD", "Bearer token"));
-        verify(cartRepository, times(1)).findByUserId(999L);
+            cartService.checkout("999L", "CREDIT_CARD", "Bearer token"));
+        verify(cartRepository, times(1)).findByUserId("999L");
         verify(orderServiceClient, never()).checkout(any(), any());
     }
 
@@ -296,13 +296,13 @@ class CartServiceTest {
         // Arrange
         Cart emptyCart = new Cart();
         emptyCart.setId(1L);
-        emptyCart.setUserId(1L);
+        emptyCart.setUserId("1L");
 
-        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(emptyCart));
+        when(cartRepository.findByUserId("1L")).thenReturn(Optional.of(emptyCart));
 
         // Act & Assert
         assertThrows(CartNotFoundException.class, () -> 
-            cartService.checkout(1L, "CREDIT_CARD", "Bearer token"));
+            cartService.checkout("1L", "CREDIT_CARD", "Bearer token"));
         verify(orderServiceClient, never()).checkout(any(), any());
     }
 
@@ -311,7 +311,7 @@ class CartServiceTest {
     @DisplayName("Should create new cart when adding item to non-existent cart")
     void testAddToCart_CreateNewCart() {
         // Arrange
-        when(cartRepository.findByUserId(2L)).thenReturn(Optional.empty());
+        when(cartRepository.findByUserId("2L")).thenReturn(Optional.empty());
         when(cartRepository.save(any(Cart.class))).thenAnswer(invocation -> {
             Cart newCart = invocation.getArgument(0);
             newCart.setId(2L);
@@ -321,7 +321,7 @@ class CartServiceTest {
         when(cartItemRepository.save(any(CartItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        CartResponse result = cartService.addToCart(2L, addToCartRequest);
+        CartResponse result = cartService.addToCart("2L", addToCartRequest);
 
         // Assert
         assertNotNull(result);
@@ -340,26 +340,26 @@ class CartServiceTest {
         nullPriceProduct.setStockQuantity(50);
         nullPriceProduct.setPrice(null);
 
-        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(new Cart()));
+        when(cartRepository.findByUserId("1L")).thenReturn(Optional.of(new Cart()));
         when(productServiceClient.getProductById(100L)).thenReturn(nullPriceProduct);
 
         // Act & Assert
-        assertThrows(ProductNotAvailableException.class, () -> cartService.addToCart(1L, addToCartRequest));
+        assertThrows(ProductNotAvailableException.class, () -> cartService.addToCart("1L", addToCartRequest));
     }
 
     @Test
     @DisplayName("Should handle exception when getting product details during cart conversion")
     void testGetCart_ProductServiceError() {
         // Arrange
-        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(cartRepository.findByUserId("1L")).thenReturn(Optional.of(cart));
         when(productServiceClient.getProductById(100L)).thenThrow(new RuntimeException("Product service unavailable"));
 
         // Act
-        CartResponse result = cartService.getCart(1L);
+        CartResponse result = cartService.getCart("1L");
 
         // Assert
         assertNotNull(result);
-        assertEquals(1L, result.getUserId());
+        assertEquals("1L", result.getUserId());
         assertFalse(result.getItems().isEmpty());
         CartResponse.CartItemResponse item = result.getItems().get(0);
         assertTrue(item.getProductName().startsWith("Product"));

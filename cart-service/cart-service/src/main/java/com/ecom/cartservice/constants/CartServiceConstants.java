@@ -69,7 +69,7 @@ public final class CartServiceConstants {
     public static final String LOG_DELETE_CLEAR_CART_REQUEST = "DELETE /cart/clear - Clearing cart for user: {}";
     public static final String LOG_POST_CHECKOUT_REQUEST = "POST /cart/checkout - Processing checkout for user: {}";
     public static final String LOG_NO_AUTHORIZATION_HEADER = "No authorization header provided";
-    public static final String LOG_ACCESS_DENIED_USER_CANNOT_ACCESS_CART = "Access denied - user {} cannot access cart for user {}";
+    public static final String LOG_ACCESS_DENIED_USER_CANNOT_ACCESS_CART = "Access denied - {} cannot access cart for user {}";
     public static final String LOG_ACCESS_DENIED_USER_NO_USER_ROLE = "Access denied - user does not have USER role";
     public static final String LOG_ACCESS_DENIED_USER_CANNOT_ADD_TO_CART = "Access denied - user {} cannot add to cart for user {}";
     public static final String LOG_ACCESS_DENIED_USER_CANNOT_REMOVE_FROM_CART = "Access denied - user {} cannot remove from cart for user {}";

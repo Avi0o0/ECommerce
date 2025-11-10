@@ -1,6 +1,7 @@
 package com.ecom.userservice.client;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,7 +15,7 @@ import com.ecom.userservice.dto.OrderSummaryResponse;
 public interface OrderServiceClient {
 
     @GetMapping("/orders/user/{userId}")
-    List<OrderSummaryResponse> getOrdersByUserId(@PathVariable("userId") Long userId,
+    List<OrderSummaryResponse> getOrdersByUserId(@PathVariable("userId") UUID userId,
                                                  @RequestHeader("Authorization") String authorization);
 
     @GetMapping("/orders/{orderId}")

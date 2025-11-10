@@ -44,12 +44,12 @@ public class PaymentControllerTest {
     @BeforeEach
     void setUp() {
         // Set up test data
-        validPaymentRequest = new PaymentRequest(1L, 1L, new BigDecimal("100.00"), "CREDIT_CARD");
+        validPaymentRequest = new PaymentRequest(1L, "1L", new BigDecimal("100.00"), "CREDIT_CARD");
 
         mockPaymentResponse = new PaymentResponse();
         mockPaymentResponse.setId(1L);
         mockPaymentResponse.setOrderId(1L);
-        mockPaymentResponse.setUserId(1L);
+        mockPaymentResponse.setUserId("1L");
         mockPaymentResponse.setAmount(new BigDecimal("100.00"));
         mockPaymentResponse.setPaymentMethod("CREDIT_CARD");
         mockPaymentResponse.setPaymentStatus("SUCCESS");
@@ -103,7 +103,7 @@ public class PaymentControllerTest {
     @Test
     void getUserPayments_ValidUserId_ReturnsPaymentsList() throws Exception {
         List<PaymentResponse> mockPayments = Arrays.asList(mockPaymentResponse);
-        when(paymentService.getPaymentsByUserId(1L)).thenReturn(mockPayments);
+        when(paymentService.getPaymentsByUserId("1L")).thenReturn(mockPayments);
 
         mockMvc.perform(get("/payments/user/1"))
                 .andExpect(status().isOk())

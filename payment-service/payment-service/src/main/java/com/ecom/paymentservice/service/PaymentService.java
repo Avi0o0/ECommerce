@@ -74,7 +74,7 @@ public class PaymentService {
     }
     
     @Transactional(readOnly = true)
-    public List<PaymentResponse> getPaymentsByUserId(Long userId) {
+    public List<PaymentResponse> getPaymentsByUserId(String userId) {
         logger.info(PaymentServiceConstants.LOG_GETTING_PAYMENTS_FOR_USER, userId);
         List<Payment> payments = paymentRepository.findByUserIdOrderByCreatedAtDesc(userId);
         return payments.stream()

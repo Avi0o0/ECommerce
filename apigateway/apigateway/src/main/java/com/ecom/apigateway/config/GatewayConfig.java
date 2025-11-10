@@ -1,5 +1,7 @@
 package com.ecom.apigateway.config;
 
+import java.net.ConnectException;
+
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -9,7 +11,8 @@ import org.springframework.context.annotation.Configuration;
 public class GatewayConfig {
 
     @Bean
-    RouteLocator customRouteLocator(RouteLocatorBuilder builder, AuthenticationFilter authenticationFilter) {
+    RouteLocator customRouteLocator(RouteLocatorBuilder builder, AuthenticationFilter authenticationFilter) throws ConnectException {
+    	try {
         return builder.routes()
                 // Auth Service - Public access
                 .route("auth-service", r -> r
@@ -24,8 +27,15 @@ public class GatewayConfig {
                         .uri("lb://USER-SERVICE")
                 )
                 
-                // Product Service - Requires authentication for admin operations
-                .route("product-service", r -> r
+                .route("product-service-public", r -> r
+                		.order(1)
+                        .path("/products").and().method("GET")
+                        .uri("lb://PRODUCT-SERVICE")
+                )
+                
+                // Product Service - Requires authentication
+                .route("product-service-secure", r -> r
+                		.order(2)
                         .path("/products/**")
                         .filters(f -> f.filter(authenticationFilter.apply(new AuthenticationFilter.Config())))
                         .uri("lb://PRODUCT-SERVICE")
@@ -52,12 +62,6 @@ public class GatewayConfig {
                         .uri("lb://CART-SERVICE")
                 )
                 
-                // Inventory Service
-                .route("inventory-service", r -> r
-                        .path("/api/inventory/**")
-                        .filters(f -> f.stripPrefix(2))
-                        .uri("lb://INVENTORY-SERVICE")
-                )
                 
                 // Notification Service
                 .route("notification-service", r -> r
@@ -66,5 +70,8 @@ public class GatewayConfig {
                 )
                 
                 .build();
+    	} catch (Exception e) {
+			throw new ConnectException("Service Unavaialble");
+		}
     }
 }

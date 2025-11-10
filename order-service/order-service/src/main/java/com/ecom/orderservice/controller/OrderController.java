@@ -52,7 +52,7 @@ public class OrderController {
 
             // Ensure the token belongs to the same userId provided in the request
             var tokenDetails = authenticationService.validateTokenAndGetDetails(authorization);
-            Long tokenUserId = tokenDetails.getUserId();
+            String tokenUserId = tokenDetails.getUserId();
             if (tokenUserId == null || !tokenUserId.equals(request.getUserId())) {
                 logger.warn("User {} attempted to checkout for user {}", tokenUserId, request.getUserId());
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -103,7 +103,7 @@ public class OrderController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<Object> getOrdersByUserId(@PathVariable Long userId,
+    public ResponseEntity<Object> getOrdersByUserId(@PathVariable String userId,
                                            @RequestHeader("Authorization") String authorization) {
         logger.info(OrderServiceConstants.LOG_GET_ORDERS_BY_USER_REQUEST, userId);
         

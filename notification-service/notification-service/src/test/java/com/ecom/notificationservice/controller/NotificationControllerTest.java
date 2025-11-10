@@ -54,13 +54,13 @@ class NotificationControllerTest {
     void testSendNotification() throws Exception {
         // Arrange
         NotificationRequest request = new NotificationRequest();
-        request.setUserId(1L);
+        request.setUserId("1L");
         request.setType("ORDER_CONFIRMATION");
         request.setMessage("Your order has been confirmed");
 
         NotificationResponse response = new NotificationResponse();
         response.setId(1L);
-        response.setUserId(1L);
+        response.setUserId("1L");
         response.setType("ORDER_CONFIRMATION");
         response.setMessage("Your order has been confirmed");
         response.setCreatedAt(LocalDateTime.now());
@@ -86,7 +86,7 @@ class NotificationControllerTest {
         // Arrange
         NotificationResponse response = new NotificationResponse();
         response.setId(1L);
-        response.setUserId(1L);
+        response.setUserId("1L");
         response.setType("ORDER_CONFIRMATION");
         response.setMessage("Your order has been confirmed");
         response.setCreatedAt(LocalDateTime.now());
@@ -110,7 +110,7 @@ class NotificationControllerTest {
         // Arrange
         NotificationResponse notification1 = new NotificationResponse();
         notification1.setId(1L);
-        notification1.setUserId(1L);
+        notification1.setUserId("1L");
         notification1.setType("ORDER_CONFIRMATION");
         notification1.setMessage("Your order has been confirmed");
         notification1.setCreatedAt(LocalDateTime.now());
@@ -118,7 +118,7 @@ class NotificationControllerTest {
 
         NotificationResponse notification2 = new NotificationResponse();
         notification2.setId(2L);
-        notification2.setUserId(1L);
+        notification2.setUserId("1L");
         notification2.setType("ORDER_SHIPPED");
         notification2.setMessage("Your order has been shipped");
         notification2.setCreatedAt(LocalDateTime.now());
@@ -126,7 +126,7 @@ class NotificationControllerTest {
 
         List<NotificationResponse> notifications = Arrays.asList(notification1, notification2);
 
-        when(notificationService.getUserNotifications(1L)).thenReturn(notifications);
+        when(notificationService.getUserNotifications("1L")).thenReturn(notifications);
 
         // Act & Assert
         mockMvc.perform(get("/notifications/user/1"))

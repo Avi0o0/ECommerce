@@ -19,12 +19,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     /**
      * Find all orders by user ID
      */
-    List<Order> findByUserIdOrderByCreatedAtDesc(Long userId);
+    List<Order> findByUserIdOrderByCreatedAtDesc(String userId);
     
     /**
      * Find all orders by user ID with pagination
      */
-    Page<Order> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    Page<Order> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
     
     /**
      * Find orders by order status
@@ -39,12 +39,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     /**
      * Find orders by user ID and order status
      */
-    List<Order> findByUserIdAndOrderStatusOrderByCreatedAtDesc(Long userId, OrderStatus orderStatus);
+    List<Order> findByUserIdAndOrderStatusOrderByCreatedAtDesc(String userId, OrderStatus orderStatus);
     
     /**
      * Find orders by user ID and payment status
      */
-    List<Order> findByUserIdAndPaymentStatusOrderByCreatedAtDesc(Long userId, String paymentStatus);
+    List<Order> findByUserIdAndPaymentStatusOrderByCreatedAtDesc(String userId, String paymentStatus);
     
     /**
      * Find orders created between two dates
@@ -57,14 +57,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      * Find orders by user ID created between two dates
      */
     @Query("SELECT o FROM Order o WHERE o.userId = :userId AND o.createdAt BETWEEN :startDate AND :endDate ORDER BY o.createdAt DESC")
-    List<Order> findOrdersByUserBetweenDates(@Param("userId") Long userId,
+    List<Order> findOrdersByUserBetweenDates(@Param("userId") String userId,
                                            @Param("startDate") LocalDateTime startDate, 
                                            @Param("endDate") LocalDateTime endDate);
     
     /**
      * Count orders by user ID
      */
-    long countByUserId(Long userId);
+    long countByUserId(String userId);
     
     /**
      * Count orders by order status
@@ -85,5 +85,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     /**
      * Find order by ID and user ID (for security)
      */
-    Optional<Order> findByIdAndUserId(Long id, Long userId);
+    Optional<Order> findByIdAndUserId(Long id, String userId);
 }

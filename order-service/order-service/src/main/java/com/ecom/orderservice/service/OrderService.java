@@ -194,7 +194,7 @@ public class OrderService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<OrderResponse> getOrdersByUserId(Long userId) {
+	public List<OrderResponse> getOrdersByUserId(String userId) {
 		logger.info(OrderServiceConstants.LOG_GETTING_ORDERS_FOR_USER, userId);
 		List<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
 		return orders.stream().map(this::convertToResponse).toList();

@@ -206,11 +206,14 @@ public class ProductService {
 	 * Update search history CSV for a user by appending a keyword if not already
 	 * present. Stored format: ",TV,Phone,"
 	 */
-	public void updateSearchHistory(UUID userId, String keyword) {
+	public void updateSearchHistory(String userId, String keyword) {
 		if (userId == null || keyword == null || keyword.isBlank())
 			return;
 
 		String normalized = keyword.trim();
+		
+		validateUserID(userId);
+		
 		SearchHistory history = searchHistoryRepository.findByUserId(userId)
 				.orElseGet(() -> new SearchHistory(userId, ","));
 		String csv = history.getSearchHistory();
@@ -253,7 +256,7 @@ public class ProductService {
 	public List<ProductResponse> getRecentProductsForUser(UUID userId, int limit) {
 		if (userId == null)
 			return List.of();
-		return searchHistoryRepository.findByUserId(userId).map(SearchHistory::getSearchHistory).map(csv -> {
+		return searchHistoryRepository.findByUserId(userId.toString()).map(SearchHistory::getSearchHistory).map(csv -> {
 			if (csv == null || csv.isBlank())
 				return List.<ProductResponse>of();
 
@@ -354,8 +357,17 @@ public class ProductService {
 	 * Convert Product entity to ProductResponse DTO
 	 */
 	private RateProduct convertToRateResponse(RateRequest rateRequest) {
-		String userID = rateRequest.getUserId();
-		return new RateProduct(rateRequest.getStarsCount(), userID, rateRequest.getComment(),
+		return new RateProduct(rateRequest.getStarsCount(), rateRequest.getUserId(), rateRequest.getComment(),
 				rateRequest.getProductId());
+	}
+	
+	public UUID validateUserID(String id) {
+		UUID userId = null;
+		try {
+			userId = UUID.fromString(id);
+		} catch (Exception e) {
+			throw new IllegalArgumentException("Invalid ID");
+		}
+		return userId;
 	}
 }

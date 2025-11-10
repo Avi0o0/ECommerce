@@ -30,7 +30,7 @@ public class PaymentRepositoryTest {
     @BeforeEach
     void setUp() {
         // Create test payment
-        testPayment = new Payment(1L, 1L, new BigDecimal("100.00"), "CREDIT_CARD");
+        testPayment = new Payment(1L, "1L", new BigDecimal("100.00"), "CREDIT_CARD");
         testPayment.setPaymentStatus(PaymentStatus.SUCCESS);
         testPayment.setTransactionId("TX123");
         testPayment = paymentRepository.save(testPayment);
@@ -45,14 +45,14 @@ public class PaymentRepositoryTest {
 
     @Test
     void findByUserIdOrderByCreatedAtDesc_ExistingUser_ReturnsPayment() {
-        List<Payment> found = paymentRepository.findByUserIdOrderByCreatedAtDesc(1L);
+        List<Payment> found = paymentRepository.findByUserIdOrderByCreatedAtDesc("1L");
         assertThat(found).isNotEmpty();
         assertThat(found.get(0).getUserId()).isEqualTo(1L);
     }
 
     @Test
     void findByUserIdOrderByCreatedAtDesc_WithPagination_ReturnsPageOfPayments() {
-        Page<Payment> found = paymentRepository.findByUserIdOrderByCreatedAtDesc(1L, PageRequest.of(0, 10));
+        Page<Payment> found = paymentRepository.findByUserIdOrderByCreatedAtDesc("1L", PageRequest.of(0, 10));
         assertThat(found).isNotEmpty();
         assertThat(found.getContent().get(0).getUserId()).isEqualTo(1L);
     }
@@ -66,7 +66,7 @@ public class PaymentRepositoryTest {
 
     @Test
     void findByUserIdAndPaymentStatusOrderByCreatedAtDesc_ExistingUserAndStatus_ReturnsPayment() {
-        List<Payment> found = paymentRepository.findByUserIdAndPaymentStatusOrderByCreatedAtDesc(1L, PaymentStatus.SUCCESS);
+        List<Payment> found = paymentRepository.findByUserIdAndPaymentStatusOrderByCreatedAtDesc("1L", PaymentStatus.SUCCESS);
         assertThat(found).isNotEmpty();
         assertThat(found.get(0).getUserId()).isEqualTo(1L);
         assertThat(found.get(0).getPaymentStatus()).isEqualTo(PaymentStatus.SUCCESS);
@@ -81,7 +81,7 @@ public class PaymentRepositoryTest {
 
     @Test
     void findByOrderIdAndUserId_ExistingOrderAndUser_ReturnsPayment() {
-        Optional<Payment> found = paymentRepository.findByOrderIdAndUserId(1L, 1L);
+        Optional<Payment> found = paymentRepository.findByOrderIdAndUserId(1L, "1L");
         assertThat(found).isPresent();
         assertThat(found.get().getOrderId()).isEqualTo(1L);
         assertThat(found.get().getUserId()).isEqualTo(1L);
@@ -99,14 +99,14 @@ public class PaymentRepositoryTest {
     void findPaymentsByUserBetweenDates_WithinRange_ReturnsPayments() {
         LocalDateTime start = LocalDateTime.now().minusDays(1);
         LocalDateTime end = LocalDateTime.now().plusDays(1);
-        List<Payment> found = paymentRepository.findPaymentsByUserBetweenDates(1L, start, end);
+        List<Payment> found = paymentRepository.findPaymentsByUserBetweenDates("1L", start, end);
         assertThat(found).isNotEmpty();
         assertThat(found.get(0).getUserId()).isEqualTo(1L);
     }
 
     @Test
     void countByUserId_ExistingUser_ReturnsCount() {
-        long count = paymentRepository.countByUserId(1L);
+        long count = paymentRepository.countByUserId("1L");
         assertThat(count).isPositive();
     }
 
@@ -132,7 +132,7 @@ public class PaymentRepositoryTest {
 
     @Test
     void calculateTotalAmountPaidByUser_ExistingUser_ReturnsTotal() {
-        BigDecimal total = paymentRepository.calculateTotalAmountPaidByUser(1L);
+        BigDecimal total = paymentRepository.calculateTotalAmountPaidByUser("1L");
         assertThat(total).isGreaterThan(BigDecimal.ZERO);
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.ecom.userservice.client.OrderServiceClient;
 import com.ecom.userservice.dto.OrderResponse;
+import com.ecom.userservice.dto.OrderSummaryResponse;
 import com.ecom.userservice.dto.UpdatePasswordRequest;
 import com.ecom.userservice.dto.VerifyPasswordRequest;
 import com.ecom.userservice.entity.UserAccount;
@@ -67,7 +68,7 @@ public class UserService {
 		}
 	}
 
-	public List<com.ecom.userservice.dto.OrderSummaryResponse> getUserOrders(Long id, String authorization,
+	public List<OrderSummaryResponse> getUserOrders(UUID id, String authorization,
 			String requesterUsername) {
 		UserAccount requester = userRepo.findByUsername(requesterUsername)
 				.orElseThrow(() -> new UserNotFoundException("User not found: " + requesterUsername));
@@ -77,7 +78,7 @@ public class UserService {
 		return orderClient.getOrdersByUserId(id, authorization);
 	}
 
-	public OrderResponse getOrderDetails(Long id, Long orderId, String authorization, String requesterUsername) {
+	public OrderResponse getOrderDetails(UUID id, Long orderId, String authorization, String requesterUsername) {
 		UserAccount requester = userRepo.findByUsername(requesterUsername)
 				.orElseThrow(() -> new UserNotFoundException("User not found: " + requesterUsername));
 		if (!requester.getId().equals(id)) {
@@ -87,7 +88,7 @@ public class UserService {
 		if (order == null) {
 			return null;
 		}
-		if (!order.getUserId().equals(id)) {
+		if ((order.getUserId() != id)) {
 			throw new IllegalArgumentException("Order does not belong to the user");
 		}
 		return order;

@@ -7,7 +7,7 @@ public class PaymentDto {
     
     public static class PaymentRequest {
         private Long orderId;
-        private Long userId;
+        private String userId;
         private BigDecimal amount;
         private String paymentMethod;
         private String currency;
@@ -15,7 +15,7 @@ public class PaymentDto {
         // Constructors
         public PaymentRequest() {}
         
-        public PaymentRequest(Long orderId, Long userId, BigDecimal amount, String paymentMethod, String currency) {
+        public PaymentRequest(Long orderId, String userId, BigDecimal amount, String paymentMethod, String currency) {
             this.orderId = orderId;
             this.userId = userId;
             this.amount = amount;
@@ -32,11 +32,11 @@ public class PaymentDto {
             this.orderId = orderId;
         }
         
-        public Long getUserId() {
+        public String getUserId() {
             return userId;
         }
         
-        public void setUserId(Long userId) {
+        public void setUserId(String userId) {
             this.userId = userId;
         }
         

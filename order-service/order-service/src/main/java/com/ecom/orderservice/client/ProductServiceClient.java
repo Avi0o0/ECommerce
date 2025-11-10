@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.ecom.orderservice.dto.ProductResponse;
+
 @FeignClient(name = "product-service")
 public interface ProductServiceClient {
     
@@ -13,6 +15,6 @@ public interface ProductServiceClient {
     void reduceStockByProductId(@RequestParam Long productId, @RequestParam Integer quantity);
 
     @GetMapping("/products/{productId}")
-    com.ecom.orderservice.dto.ProductResponse getProductById(@PathVariable("productId") Long productId);
+    ProductResponse getProductById(@PathVariable Long productId);
 }
 

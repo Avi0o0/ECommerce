@@ -23,6 +23,7 @@ import com.ecom.cartservice.entity.CartItem;
 import com.ecom.cartservice.exception.CartItemNotFoundException;
 import com.ecom.cartservice.exception.CartNotFoundException;
 import com.ecom.cartservice.exception.ProductNotAvailableException;
+import com.ecom.cartservice.exception.ProductNotFoundException;
 import com.ecom.cartservice.repository.CartItemRepository;
 import com.ecom.cartservice.repository.CartRepository;
 
@@ -50,7 +51,7 @@ public class CartService {
      * Get cart for user
      */
     @Transactional(readOnly = true)
-    public CartResponse getCart(Long userId) {
+    public CartResponse getCart(String userId) {
         logger.info(CartServiceConstants.LOG_GETTING_CART_FOR_USER, userId);
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new CartNotFoundException(CartServiceConstants.CART_NOT_FOUND_MESSAGE + userId));
@@ -60,13 +61,19 @@ public class CartService {
     /**
      * Add product to cart
      */
-    public CartResponse addToCart(Long userId, AddToCartRequest request) {
+    public CartResponse addToCart(String userId, AddToCartRequest request) {
         logger.info(CartServiceConstants.LOG_ADDING_PRODUCT_TO_CART, request.getProductId(), userId);
 
         // Get product details and check availability
+        ProductDto.ProductResponse product = null;
         logger.debug("Calling Product Service for product ID: {}", request.getProductId());
-        ProductDto.ProductResponse product = productServiceClient.getProductById(request.getProductId());
-        logger.debug("Product Service response: {}", product);
+        try {
+        	product = productServiceClient.getProductById(request.getProductId());
+            logger.debug("Product Service response: {}", product);
+        } catch (Exception e) {
+        	logger.error("Product Service returned null for product ID: {}", request.getProductId());
+            throw new ProductNotFoundException(CartServiceConstants.PRODUCT_NOT_FOUND_MESSAGE);
+		}
         
         if (product == null) {
             logger.error("Product Service returned null for product ID: {}", request.getProductId());
@@ -138,7 +145,7 @@ public class CartService {
     /**
      * Remove product from cart
      */
-    public CartResponse removeFromCart(Long userId, Long productId) {
+    public CartResponse removeFromCart(String userId, Long productId) {
         logger.info(CartServiceConstants.LOG_REMOVING_PRODUCT_FROM_CART, productId, userId);
 
         Cart cart = cartRepository.findByUserId(userId)
@@ -159,7 +166,7 @@ public class CartService {
     /**
      * Clear cart
      */
-    public void clearCart(Long userId) {
+    public void clearCart(String userId) {
         logger.info(CartServiceConstants.LOG_CLEARING_CART_FOR_USER, userId);
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new CartNotFoundException(CartServiceConstants.CART_NOT_FOUND_MESSAGE + userId));
@@ -173,7 +180,7 @@ public class CartService {
     /**
      * Checkout cart - create order
      */
-    public OrderResponse checkout(Long userId, String paymentMethod, String authorization) {
+    public OrderResponse checkout(String userId, String paymentMethod, String authorization) {
         logger.info(CartServiceConstants.LOG_PROCESSING_CHECKOUT_FOR_USER, userId);
         
         Cart cart = cartRepository.findByUserId(userId)

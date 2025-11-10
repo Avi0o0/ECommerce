@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 public class OrderResponse {
     
     private Long id;
-    private Long userId;
+    private String userId;
     private BigDecimal totalAmount;
     private String orderStatus;
     private String paymentStatus;
@@ -15,7 +15,7 @@ public class OrderResponse {
     // Constructors
     public OrderResponse() {}
     
-    public OrderResponse(Long id, Long userId, BigDecimal totalAmount, String orderStatus, 
+    public OrderResponse(Long id, String userId, BigDecimal totalAmount, String orderStatus, 
                         String paymentStatus, LocalDateTime createdAt) {
         this.id = id;
         this.userId = userId;
@@ -34,11 +34,11 @@ public class OrderResponse {
         this.id = id;
     }
     
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
     
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
     

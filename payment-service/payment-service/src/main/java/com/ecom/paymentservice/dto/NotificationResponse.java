@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 public class NotificationResponse {
     
     private Long id;
-    private Long userId;
+    private String userId;
     private String message;
     private String type;
     private String status;
@@ -14,7 +14,7 @@ public class NotificationResponse {
     // Constructors
     public NotificationResponse() {}
     
-    public NotificationResponse(Long id, Long userId, String message, String type, String status, LocalDateTime createdAt) {
+    public NotificationResponse(Long id, String userId, String message, String type, String status, LocalDateTime createdAt) {
         this.id = id;
         this.userId = userId;
         this.message = message;
@@ -32,11 +32,11 @@ public class NotificationResponse {
         this.id = id;
     }
     
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
     
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
     

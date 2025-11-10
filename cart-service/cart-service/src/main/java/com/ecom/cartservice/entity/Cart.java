@@ -25,7 +25,7 @@ public class Cart {
     private Long id;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private String userId;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -50,7 +50,7 @@ public class Cart {
     // Constructors
     public Cart() {}
 
-    public Cart(Long userId) {
+    public Cart(String userId) {
         this.userId = userId;
     }
 
@@ -63,11 +63,11 @@ public class Cart {
         this.id = id;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 

@@ -2,23 +2,25 @@ package jwt.util;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jwt.util.service.PropertiesHandler;
 
 public class JwtTokenUtil {
 
-	private String secret = "wNeX5sZgDTU8+eG7g+3aGIRFgu5dbXQzfmv2Q/iMoEY=";
+	private static String secret = PropertiesHandler.getProperty("jwt-secret");
 
-	private Key getSigningKey() {
+	private static Key getSigningKey() {
 		byte[] keyBytes = Decoders.BASE64.decode(secret);
 		return Keys.hmacShaKeyFor(keyBytes);
 	}
 
-	public boolean validateToken(String token) {
+	public static boolean validateToken(String token) {
 		try {
 			Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token);
 			return true;
@@ -27,12 +29,12 @@ public class JwtTokenUtil {
 		}
 	}
 
-	public String extractUsername(String token) {
+	public static String extractUsername(String token) {
 		Claims claims = Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
 		return claims.getSubject();
 	}
 
-	public boolean isTokenValid(String token) {
+	public static boolean isTokenValid(String token) {
 		try {
 			Claims claims = extractAllClaims(token);
 			Date exp = claims.getExpiration();
@@ -46,7 +48,17 @@ public class JwtTokenUtil {
 		return extractAllClaims(token).getExpiration();
 	}
 
-	public Claims extractAllClaims(String token) {
+	public static Claims extractAllClaims(String token) {
 		return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
+	}
+
+	public static List<String> extractRoles(String token) {
+		Object value = extractAllClaims(token).get("roles");
+
+		if (value instanceof List<?>) {
+			return ((List<?>) value).stream().map(Object::toString).toList();
+		}
+
+		return List.of();
 	}
 }

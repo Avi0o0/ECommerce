@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 public class NotificationRequest {
     
     @NotNull(message = "User ID is required")
-    private Long userId;
+    private String userId;
     
     @NotBlank(message = "Message is required")
     private String message;
@@ -17,18 +17,18 @@ public class NotificationRequest {
     // Constructors
     public NotificationRequest() {}
     
-    public NotificationRequest(Long userId, String message, String type) {
+    public NotificationRequest(String userId, String message, String type) {
         this.userId = userId;
         this.message = message;
         this.type = type;
     }
     
     // Getters and Setters
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
     
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
     

@@ -53,6 +53,17 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
+    
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<GlobalErrorResponse> handleProductNotAvailableException(ProductNotFoundException ex, WebRequest request) {
+        logger.warn(CartServiceConstants.LOG_PRODUCT_NOT_AVAILABLE, ex.getMessage());
+        GlobalErrorResponse errorResponse = new GlobalErrorResponse(
+            400,
+            CartServiceConstants.PRODUCT_NOT_AVAILABLE_TITLE,
+            ex.getMessage()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<GlobalErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
@@ -67,7 +78,7 @@ public class GlobalExceptionHandler {
         // Convert validation errors to a single message
         StringBuilder errorMessage = new StringBuilder();
         errors.forEach((field, message) -> {
-            if (errorMessage.length() > 0) {
+            if (!errorMessage.isEmpty()) {
                 errorMessage.append(", ");
             }
             errorMessage.append(field).append(": ").append(message);

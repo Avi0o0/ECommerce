@@ -19,7 +19,7 @@ public class Notification {
     private Long id;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private String userId;
 
     @Column(name = "message", nullable = false, length = 1000)
     private String message;
@@ -41,7 +41,7 @@ public class Notification {
     // Constructors
     public Notification() {}
 
-    public Notification(Long userId, String message, String type) {
+    public Notification(String userId, String message, String type) {
         this.userId = userId;
         this.message = message;
         this.type = type;
@@ -56,11 +56,11 @@ public class Notification {
         this.id = id;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 

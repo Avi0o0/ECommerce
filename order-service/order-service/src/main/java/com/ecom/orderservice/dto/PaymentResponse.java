@@ -7,7 +7,7 @@ public class PaymentResponse {
     
     private Long id;
     private Long orderId;
-    private Long userId;
+    private String userId;
     private BigDecimal amount;
     private String paymentMethod;
     private String paymentStatus;
@@ -17,7 +17,7 @@ public class PaymentResponse {
     // Constructors
     public PaymentResponse() {}
     
-    public PaymentResponse(Long id, Long orderId, Long userId, BigDecimal amount, String paymentMethod, 
+    public PaymentResponse(Long id, Long orderId, String userId, BigDecimal amount, String paymentMethod, 
                          String paymentStatus, String transactionId, LocalDateTime createdAt) {
         this.id = id;
         this.orderId = orderId;
@@ -46,11 +46,11 @@ public class PaymentResponse {
         this.orderId = orderId;
     }
     
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
     
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
     
