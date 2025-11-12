@@ -29,6 +29,7 @@ import com.ecom.userservice.dto.UserResponse;
 import com.ecom.userservice.dto.VerifyPasswordRequest;
 import com.ecom.userservice.entity.UserAccount;
 import com.ecom.userservice.exception.PasswordVerificationFailedException;
+import com.ecom.userservice.service.UserService;
 
 import jakarta.validation.Valid;
 
@@ -37,9 +38,9 @@ import jakarta.validation.Valid;
 public class UserController {
 
 	private static final Logger logger = LoggerFactory.getLogger(UserController.class);
-	private final com.ecom.userservice.service.UserService userService;
+	private final UserService userService;
 
-	public UserController(com.ecom.userservice.service.UserService userService) {
+	public UserController(UserService userService) {
 		this.userService = userService;
 	}
 
@@ -50,8 +51,8 @@ public class UserController {
 		logger.info(UserServiceConstants.LOG_SUCCESSFULLY_RETRIEVED_USERS, users.size());
 
 		// Map to UserResponse to avoid exposing sensitive fields
-		List<com.ecom.userservice.dto.UserResponse> dtoUsers = users.stream().map(u -> {
-			com.ecom.userservice.dto.UserResponse r = new com.ecom.userservice.dto.UserResponse();
+		List<UserResponse> dtoUsers = users.stream().map(u -> {
+			UserResponse r = new UserResponse();
 			r.setId(u.getId());
 			r.setUsername(u.getUsername());
 			r.setFirstName(u.getFirstName());

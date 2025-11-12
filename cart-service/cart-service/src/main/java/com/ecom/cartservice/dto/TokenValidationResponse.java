@@ -3,7 +3,6 @@ package com.ecom.cartservice.dto;
 import java.util.List;
 
 public class TokenValidationResponse {
-    private String token;
     private String username;
     private String userId;
     private List<String> roles;
@@ -11,20 +10,11 @@ public class TokenValidationResponse {
     
     public TokenValidationResponse() {}
     
-    public TokenValidationResponse(String token, String username, String userId, List<String> roles, boolean valid) {
-        this.token = token;
+    public TokenValidationResponse(String username, String userId, List<String> roles, boolean valid) {
         this.username = username;
         this.userId = userId;
         this.roles = roles;
         this.valid = valid;
-    }
-    
-    public String getToken() {
-        return token;
-    }
-    
-    public void setToken(String token) {
-        this.token = token;
     }
     
     public String getUsername() {

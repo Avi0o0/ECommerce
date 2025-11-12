@@ -2,6 +2,7 @@ package com.ecom.userservice.security;
 
 import java.security.Key;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -47,13 +48,15 @@ public class JwtService {
 		return extractAllClaims(token).getSubject();
 	}
 
-	@SuppressWarnings("unchecked")
+	//@SuppressWarnings("unchecked")
 	public List<String> extractRoles(String token) {
-		Object value = extractAllClaims(token).get("roles");
-		if (value instanceof List) {
-			return ((List<Object>) value).stream().map(Object::toString).toList();
-		}
-		return List.of();
+	    Object value = extractAllClaims(token).get("roles");
+	    if (value instanceof List<?>) {
+	        return ((List<?>) value).stream()
+	                .map(String::valueOf)
+	                .toList();
+	    }
+	    return Collections.emptyList();
 	}
 
 	public boolean isTokenValid(String token, UserDetails userDetails) {
@@ -62,13 +65,6 @@ public class JwtService {
 		return username.equals(userDetails.getUsername()) && exp.after(new Date());
 	}
 
-	/**
-	 * Validates if a token is valid (not expired and properly signed) without
-	 * requiring UserDetails
-	 * 
-	 * @param token JWT token to validate
-	 * @return true if token is valid, false otherwise
-	 */
 	public boolean isTokenValid(String token) {
 		try {
 			Claims claims = extractAllClaims(token);

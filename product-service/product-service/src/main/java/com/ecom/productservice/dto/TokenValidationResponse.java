@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.UUID;
 
 public class TokenValidationResponse {
-    private String token;
     private String username;
     private UUID userId;
     private List<String> roles;
@@ -12,20 +11,11 @@ public class TokenValidationResponse {
     
     public TokenValidationResponse() {}
     
-    public TokenValidationResponse(String token, String username, UUID userId, List<String> roles, boolean valid) {
-        this.token = token;
+    public TokenValidationResponse(String username, UUID userId, List<String> roles, boolean valid) {
         this.username = username;
         this.userId = userId;
         this.roles = roles;
         this.valid = valid;
-    }
-    
-    public String getToken() {
-        return token;
-    }
-    
-    public void setToken(String token) {
-        this.token = token;
     }
     
     public String getUsername() {

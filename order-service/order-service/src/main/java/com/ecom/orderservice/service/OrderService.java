@@ -15,10 +15,12 @@ import com.ecom.orderservice.dto.OrderRequest;
 import com.ecom.orderservice.dto.OrderResponse;
 import com.ecom.orderservice.dto.PaymentRequest;
 import com.ecom.orderservice.dto.PaymentResponse;
+import com.ecom.orderservice.dto.ProductResponse;
 import com.ecom.orderservice.entity.Order;
 import com.ecom.orderservice.entity.OrderItem;
 import com.ecom.orderservice.entity.OrderStatus;
 import com.ecom.orderservice.exception.OrderNotFoundException;
+import com.ecom.orderservice.exception.ProductNotAvailableException;
 import com.ecom.orderservice.repository.OrderItemRepository;
 import com.ecom.orderservice.repository.OrderRepository;
 
@@ -42,7 +44,7 @@ public class OrderService {
 	}
 
 	@Transactional
-	public OrderResponse checkout(OrderRequest request) {
+	public OrderResponse checkout(OrderRequest request, String authHeader) {
 		logger.info(OrderServiceConstants.LOG_STARTING_CHECKOUT_PROCESS, request.getUserId());
 
 		try {
@@ -51,32 +53,37 @@ public class OrderService {
 				throw new IllegalArgumentException(OrderServiceConstants.ORDER_ITEMS_REQUIRED_MESSAGE);
 			}
 
-			for (com.ecom.orderservice.dto.OrderItemRequest itemRequest : request.getOrderItems()) {
+			for (OrderItemRequest itemRequest : request.getOrderItems()) {
 				try {
-					com.ecom.orderservice.dto.ProductResponse product = productServiceClient.getProductById(itemRequest.getProductId());
+					ProductResponse product = productServiceClient.getProductById(itemRequest.getProductId(),
+							authHeader);
 					if (product == null) {
-						throw new com.ecom.orderservice.exception.ProductNotAvailableException(OrderServiceConstants.PRODUCT_NOT_FOUND_MESSAGE + ": " + itemRequest.getProductId());
+						throw new ProductNotAvailableException(
+								OrderServiceConstants.PRODUCT_NOT_FOUND_MESSAGE + ": " + itemRequest.getProductId());
 					}
 
 					Integer available = product.getStockQuantity();
 					if (available == null || available <= 0) {
-						throw new com.ecom.orderservice.exception.ProductNotAvailableException(
-								String.format(OrderServiceConstants.PRODUCT_NOT_AVAILABLE_MESSAGE, 0, itemRequest.getQuantity()));
+						throw new com.ecom.orderservice.exception.ProductNotAvailableException(String.format(
+								OrderServiceConstants.PRODUCT_NOT_AVAILABLE_MESSAGE, 0, itemRequest.getQuantity()));
 					}
 
 					if (available < itemRequest.getQuantity()) {
 						throw new com.ecom.orderservice.exception.ProductNotAvailableException(
-								String.format(OrderServiceConstants.PRODUCT_NOT_AVAILABLE_MESSAGE, available, itemRequest.getQuantity()));
+								String.format(OrderServiceConstants.PRODUCT_NOT_AVAILABLE_MESSAGE, available,
+										itemRequest.getQuantity()));
 					}
 
 					if (product.getPrice() == null) {
-						throw new com.ecom.orderservice.exception.ProductNotAvailableException(OrderServiceConstants.PRODUCT_PRICE_MISSING_MESSAGE);
+						throw new com.ecom.orderservice.exception.ProductNotAvailableException(
+								OrderServiceConstants.PRODUCT_PRICE_MISSING_MESSAGE);
 					}
 				} catch (com.ecom.orderservice.exception.ProductNotAvailableException pna) {
 					throw pna;
 				} catch (Exception e) {
 					logger.warn("Error fetching product {}: {}", itemRequest.getProductId(), e.getMessage());
-					throw new com.ecom.orderservice.exception.ProductNotAvailableException(OrderServiceConstants.PRODUCT_NOT_FOUND_MESSAGE + ": " + itemRequest.getProductId(), e);
+					throw new com.ecom.orderservice.exception.ProductNotAvailableException(
+							OrderServiceConstants.PRODUCT_NOT_FOUND_MESSAGE + ": " + itemRequest.getProductId(), e);
 				}
 			}
 
@@ -111,7 +118,7 @@ public class OrderService {
 			logger.info("About to call Payment Service with order ID: {} for user: {}", savedOrder.getId(),
 					request.getUserId());
 
-			return processPayment(paymentRequest, savedOrder);
+			return processPayment(paymentRequest, savedOrder, authHeader);
 
 		} catch (Exception e) {
 			logger.error(OrderServiceConstants.LOG_ERROR_DURING_CHECKOUT, request.getUserId(), e.getMessage(), e);
@@ -138,7 +145,7 @@ public class OrderService {
 		}
 	}
 
-	private OrderResponse processPayment(PaymentRequest paymentRequest, Order savedOrder) {
+	private OrderResponse processPayment(PaymentRequest paymentRequest, Order savedOrder, String authHeader) {
 		try {
 			PaymentResponse paymentResponse = paymentClient.processPayment(paymentRequest);
 
@@ -150,7 +157,7 @@ public class OrderService {
 				logger.info(OrderServiceConstants.LOG_PAYMENT_SUCCESSFUL, savedOrder.getId(), paymentResponse.getId());
 
 				// Reduce stock after successful payment
-				reduceStockForOrder(savedOrder);
+				reduceStockForOrder(savedOrder, authHeader);
 			} else {
 				savedOrder.setOrderStatus(OrderStatus.FAILED);
 				savedOrder.setPaymentStatus(OrderServiceConstants.PAYMENT_STATUS_FAILED);
@@ -161,7 +168,7 @@ public class OrderService {
 			logger.info(OrderServiceConstants.LOG_ORDER_STATUS_UPDATED, updatedOrder.getOrderStatus(),
 					updatedOrder.getId());
 
-			return convertToResponse(updatedOrder);
+			return convertToResponse(updatedOrder, authHeader);
 
 		} catch (Exception paymentException) {
 			logger.warn(OrderServiceConstants.LOG_PAYMENT_SERVICE_UNAVAILABLE, savedOrder.getId());
@@ -181,26 +188,26 @@ public class OrderService {
 							OrderServiceConstants.ORDER_NOT_FOUND_MESSAGE + updatedOrder.getId()));
 
 			// Return the incomplete order response instead of throwing exception
-			return convertToResponse(orderWithItems);
+			return convertToResponse(orderWithItems, authHeader);
 		}
 	}
 
 	@Transactional(readOnly = true)
-	public OrderResponse getOrderById(Long orderId) {
+	public OrderResponse getOrderById(Long orderId, String authHeader) {
 		logger.info(OrderServiceConstants.LOG_GETTING_ORDER_BY_ID, orderId);
 		Order order = orderRepository.findById(orderId)
 				.orElseThrow(() -> new OrderNotFoundException(OrderServiceConstants.ORDER_NOT_FOUND_MESSAGE + orderId));
-		return convertToResponse(order);
+		return convertToResponse(order, authHeader);
 	}
 
 	@Transactional(readOnly = true)
-	public List<OrderResponse> getOrdersByUserId(String userId) {
+	public List<OrderResponse> getOrdersByUserId(String userId, String authHeader) {
 		logger.info(OrderServiceConstants.LOG_GETTING_ORDERS_FOR_USER, userId);
 		List<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
-		return orders.stream().map(this::convertToResponse).toList();
+		return orders.stream().map(order -> convertToResponse(order, authHeader)).toList();
 	}
 
-	private OrderResponse convertToResponse(Order order) {
+	private OrderResponse convertToResponse(Order order, String authHeader) {
 		OrderResponse response = new OrderResponse(order.getId(), order.getUserId(), order.getTotalAmount(),
 				order.getOrderStatus(), order.getPaymentStatus(), order.getCreatedAt());
 
@@ -215,10 +222,11 @@ public class OrderService {
 			itemResp.setPrice(item.getPrice());
 
 			try {
-				com.ecom.orderservice.dto.ProductResponse product = productServiceClient.getProductById(item.getProductId());
+				ProductResponse product = productServiceClient.getProductById(item.getProductId(), authHeader);
 				itemResp.setProduct(product);
 			} catch (Exception e) {
-				logger.warn("Could not fetch product details for productId {}: {}", item.getProductId(), e.getMessage());
+				logger.warn("Could not fetch product details for productId {}: {}", item.getProductId(),
+						e.getMessage());
 				// product remains null if unable to fetch
 			}
 
@@ -235,7 +243,7 @@ public class OrderService {
 	/**
 	 * Reduce stock for all products in the order after successful payment
 	 */
-	private void reduceStockForOrder(Order order) {
+	private void reduceStockForOrder(Order order, String authHeader) {
 		logger.info("Reducing stock for order ID: {}", order.getId());
 
 		try {
@@ -246,7 +254,7 @@ public class OrderService {
 				try {
 					logger.info("Reducing stock for product ID: {} by quantity: {}", item.getProductId(),
 							item.getQuantity());
-					productServiceClient.reduceStockByProductId(item.getProductId(), item.getQuantity());
+					productServiceClient.reduceStockByProductId(item.getProductId(), item.getQuantity(), authHeader);
 					logger.info("Successfully reduced stock for product ID: {}", item.getProductId());
 				} catch (Exception e) {
 					logger.error("Failed to reduce stock for product ID: {} - Error: {}", item.getProductId(),

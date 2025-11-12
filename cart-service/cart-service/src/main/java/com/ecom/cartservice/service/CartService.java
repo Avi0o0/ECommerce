@@ -51,24 +51,24 @@ public class CartService {
      * Get cart for user
      */
     @Transactional(readOnly = true)
-    public CartResponse getCart(String userId) {
+    public CartResponse getCart(String userId, String authHeader) {
         logger.info(CartServiceConstants.LOG_GETTING_CART_FOR_USER, userId);
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new CartNotFoundException(CartServiceConstants.CART_NOT_FOUND_MESSAGE + userId));
-        return convertToResponse(cart);
+        return convertToResponse(cart, authHeader);
     }
 
     /**
      * Add product to cart
      */
-    public CartResponse addToCart(String userId, AddToCartRequest request) {
+    public CartResponse addToCart(String userId, AddToCartRequest request, String authHeader) {
         logger.info(CartServiceConstants.LOG_ADDING_PRODUCT_TO_CART, request.getProductId(), userId);
 
         // Get product details and check availability
         ProductDto.ProductResponse product = null;
         logger.debug("Calling Product Service for product ID: {}", request.getProductId());
         try {
-        	product = productServiceClient.getProductById(request.getProductId());
+        	product = productServiceClient.getProductById(request.getProductId(), authHeader);
             logger.debug("Product Service response: {}", product);
         } catch (Exception e) {
         	logger.error("Product Service returned null for product ID: {}", request.getProductId());
@@ -139,13 +139,13 @@ public class CartService {
             logger.info(CartServiceConstants.LOG_ADDED_NEW_PRODUCT_TO_CART, request.getProductId(), cart.getId());
         }
 
-        return convertToResponse(cart);
+        return convertToResponse(cart, authHeader);
     }
 
     /**
      * Remove product from cart
      */
-    public CartResponse removeFromCart(String userId, Long productId) {
+    public CartResponse removeFromCart(String userId, Long productId, String authHeader) {
         logger.info(CartServiceConstants.LOG_REMOVING_PRODUCT_FROM_CART, productId, userId);
 
         Cart cart = cartRepository.findByUserId(userId)
@@ -160,7 +160,7 @@ public class CartService {
         cartItemRepository.delete(itemToRemove);
         logger.info(CartServiceConstants.LOG_REMOVED_PRODUCT_FROM_CART, productId, cart.getId());
 
-        return convertToResponse(cart);
+        return convertToResponse(cart, authHeader);
     }
 
     /**
@@ -221,12 +221,12 @@ public class CartService {
     /**
      * Convert Cart entity to CartResponse DTO
      */
-    private CartResponse convertToResponse(Cart cart) {
+    private CartResponse convertToResponse(Cart cart, String authHeader) {
         List<CartResponse.CartItemResponse> itemResponses = cart.getCartItems().stream()
                 .map(item -> {
                     // Get product details for each item
                     try {
-                        ProductDto.ProductResponse product = productServiceClient.getProductById(item.getProductId());
+                        ProductDto.ProductResponse product = productServiceClient.getProductById(item.getProductId(), authHeader);
                         return new CartResponse.CartItemResponse(
                                 item.getId(),
                                 item.getProductId(),

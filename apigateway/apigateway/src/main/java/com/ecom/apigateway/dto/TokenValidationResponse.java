@@ -6,28 +6,18 @@ import java.util.List;
  * DTO for token validation response from User Service
  */
 public class TokenValidationResponse {
-    private String token;
     private String username;
-    private Long userId;
+    private String userId;
     private List<String> roles;
     private boolean valid;
-
+    
     public TokenValidationResponse() {}
-
-    public TokenValidationResponse(String token, String username, Long userId, List<String> roles, boolean valid) {
-        this.token = token;
+    
+    public TokenValidationResponse(String username, String userId, List<String> roles, boolean valid) {
         this.username = username;
         this.userId = userId;
         this.roles = roles;
         this.valid = valid;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
     }
 
     public String getUsername() {
@@ -38,11 +28,11 @@ public class TokenValidationResponse {
         this.username = username;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 

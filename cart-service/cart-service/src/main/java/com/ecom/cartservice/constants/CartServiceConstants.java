@@ -16,7 +16,7 @@ public final class CartServiceConstants {
     // Cart Service Messages
     public static final String CART_NOT_FOUND_MESSAGE = "Cart not found for user: ";
     public static final String CART_EMPTY_MESSAGE = "Cart is empty for user: ";
-    public static final String CART_ITEM_NOT_FOUND_MESSAGE = "Product %d not found in cart for user: %d";
+    public static final String CART_ITEM_NOT_FOUND_MESSAGE = "Product %d not found in cart for user: %s";
     
     // Product Service Messages
     public static final String PRODUCT_NOT_AVAILABLE_MESSAGE = "Product not available or insufficient stock. Available: %d, Requested: %d";

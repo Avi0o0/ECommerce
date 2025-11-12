@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ecom.userservice.client.ProductServiceClient;
 import com.ecom.userservice.dto.LoginRequest;
+import com.ecom.userservice.dto.ProductResponse;
 import com.ecom.userservice.dto.RegisterRequest;
 import com.ecom.userservice.dto.SuccessResponse;
 import com.ecom.userservice.dto.TokenResponse;
@@ -41,11 +43,11 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final UserAccountRepository userRepo;
     private final RoleRepository roleRepo;
-    private final com.ecom.userservice.client.ProductServiceClient productServiceClient;
+    private final ProductServiceClient productServiceClient;
 
     public AuthController(AuthenticationManager authenticationManager, JwtService jwtService,
             PasswordEncoder passwordEncoder, UserAccountRepository userRepo, RoleRepository roleRepo,
-            com.ecom.userservice.client.ProductServiceClient productServiceClient) {
+            ProductServiceClient productServiceClient) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
@@ -68,11 +70,11 @@ public class AuthController {
             logger.info("Login successful for user: {}", request.username());
 
             // Try to fetch recentActivities based on user's search history (best-effort)
-            java.util.List<com.ecom.userservice.dto.ProductResponse> recent = null;
+            List<ProductResponse> recent = null;
             try {
-                UUID userId = userRepo.findByUsername(request.username()).map(com.ecom.userservice.entity.UserAccount::getId).orElse(null);
+                UUID userId = userRepo.findByUsername(request.username()).map(UserAccount::getId).orElse(null);
                 if (userId != null) {
-                    recent = productServiceClient.getRecentProductsForUser(userId, 3);
+                    recent = productServiceClient.getRecentProductsForUser(userId, 3, token);
                 }
             } catch (Exception e) {
                 logger.warn("Could not fetch recent activities for user {}: {}", request.username(), e.getMessage());
@@ -105,19 +107,16 @@ public class AuthController {
                 
                 logger.info("Token validation successful for user: {} (ID: {}) with roles: {}", username, userId, roles);
                 
-                TokenValidationResponse response = new TokenValidationResponse(
-                    request.token(), username, userId, roles, true);
+                TokenValidationResponse response = new TokenValidationResponse(username, userId, roles, true);
                 return ResponseEntity.ok(response);
             } else {
                 logger.warn("Token validation failed");
-                TokenValidationResponse response = new TokenValidationResponse(
-                    request.token(), null, null, null, false);
+                TokenValidationResponse response = new TokenValidationResponse(null, null, null, false);
                 return ResponseEntity.ok(response);
             }
         } catch (Exception e) {
             logger.error("Token validation error: {}", e.getMessage(), e);
-            TokenValidationResponse response = new TokenValidationResponse(
-                request.token(), null, null, null, false);
+            TokenValidationResponse response = new TokenValidationResponse(null, null, null, false);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED.value()).body(response);
         }
     }

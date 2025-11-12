@@ -28,6 +28,7 @@ import com.ecom.productservice.dto.SuccessResponse;
 import com.ecom.productservice.exception.ProductNotFoundException;
 import com.ecom.productservice.service.ProductService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jwt.util.JwtTokenUtil;
 import jwt.util.service.AuthService;
@@ -38,19 +39,22 @@ public class ProductController {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProductController.class);
 	private final ProductService productService;
+	private static final String ISUSER = "isUser";
+	private static final String ISADMIN = "isAdmin";
+	private static final String USERID = "userId";
 
 	public ProductController(ProductService productService) {
 		this.productService = productService;
 	}
 
 	@GetMapping
-	public ResponseEntity<List<ProductResponse>> getAllProducts(
-			@RequestParam(value = "search", required = false) String keyword,
+	public ResponseEntity<List<ProductResponse>> getAllProducts(@RequestParam(value = "search", required = false) String keyword,
 			@RequestHeader(value = "Authorization", required = false) String authHeader) {
 		if (keyword != null && !keyword.trim().isEmpty()) {
 			logger.info("Search request with keyword: {}", keyword);
 			// store search history if user is authenticated
 			try {
+				logger.info("authentication check");
 				if (authHeader != null && AuthService.isUser(authHeader)) {
 					UUID userId = AuthService.getUserId(authHeader);
 					productService.updateSearchHistory(userId.toString(), keyword);
@@ -85,12 +89,12 @@ public class ProductController {
 	}
 
 	@PostMapping("/{productId}/buy-now")
-	public ResponseEntity<Object> buyNow(@PathVariable Long productId, @RequestParam String userId,
-			@RequestParam Integer quantity, @RequestParam String paymentMethod,
+	public ResponseEntity<Object> buyNow(HttpServletRequest servletRequest, @PathVariable Long productId,
+			@RequestParam String userId, @RequestParam Integer quantity, @RequestParam String paymentMethod,
 			@RequestHeader(value = "Authorization", required = false) String authHeader) {
 		logger.info("POST /products/{}/buy-now - User: {}, Quantity: {}, Payment: {}", productId, userId, quantity,
 				paymentMethod);
-		
+
 		UUID userID = validateUserID(userId);
 
 		if (authHeader == null) {
@@ -102,7 +106,7 @@ public class ProductController {
 		}
 
 		// Check if user is authenticated and has USER role
-		if (!AuthService.isUser(authHeader)) {
+		if (Boolean.FALSE.equals(servletRequest.getAttribute(ISUSER))) {
 			logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_USER_NO_USER_ROLE);
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
 					.body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(),
@@ -111,7 +115,7 @@ public class ProductController {
 		}
 
 		// Check if user is buying for themselves
-		UUID tokenUserId = AuthService.getUserId(authHeader);
+		UUID tokenUserId = (UUID) servletRequest.getAttribute(USERID);
 		if (tokenUserId == null || !userID.equals(tokenUserId)) {
 			logger.warn("User {} cannot buy for user {}", tokenUserId, userId);
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -124,7 +128,8 @@ public class ProductController {
 	}
 
 	@PostMapping
-	public ResponseEntity<Object> createProduct(@Valid @RequestBody ProductRequest request,
+	public ResponseEntity<Object> createProduct(HttpServletRequest servletRequest,
+			@Valid @RequestBody ProductRequest request,
 			@RequestHeader(value = "Authorization", required = false) String authHeader) {
 		logger.info(ProductServiceConstants.LOG_POST_CREATE_PRODUCT_REQUEST, request.getName());
 
@@ -136,7 +141,7 @@ public class ProductController {
 							ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
 		}
 
-		if (!AuthService.isAdmin(authHeader)) {
+		if (Boolean.FALSE.equals(servletRequest.getAttribute(ISADMIN))) {
 			logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
 					.body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(),
@@ -149,7 +154,8 @@ public class ProductController {
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<Object> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest request,
+	public ResponseEntity<Object> updateProduct(HttpServletRequest servletRequest, @PathVariable Long id,
+			@Valid @RequestBody ProductRequest request,
 			@RequestHeader(value = "Authorization", required = false) String authHeader) {
 		logger.info(ProductServiceConstants.LOG_PUT_UPDATE_PRODUCT_REQUEST, id);
 
@@ -161,7 +167,7 @@ public class ProductController {
 							ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
 		}
 
-		if (!AuthService.isAdmin(authHeader)) {
+		if (Boolean.FALSE.equals(servletRequest.getAttribute(ISADMIN))) {
 			logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
 					.body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(),
@@ -174,7 +180,7 @@ public class ProductController {
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<Object> deleteProduct(@PathVariable Long id,
+	public ResponseEntity<Object> deleteProduct(HttpServletRequest servletRequest, @PathVariable Long id,
 			@RequestHeader(value = "Authorization", required = false) String authHeader) {
 		logger.info(ProductServiceConstants.LOG_DELETE_PRODUCT_REQUEST, id);
 
@@ -186,7 +192,7 @@ public class ProductController {
 							ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
 		}
 
-		if (!AuthService.isAdmin(authHeader)) {
+		if (Boolean.FALSE.equals(servletRequest.getAttribute(ISADMIN))) {
 			logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
 					.body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(),
@@ -208,7 +214,8 @@ public class ProductController {
 	}
 
 	@PutMapping("/{sku}/stock/add")
-	public ResponseEntity<Object> addStock(@PathVariable String sku, @RequestParam Integer quantity,
+	public ResponseEntity<Object> addStock(HttpServletRequest servletRequest, @PathVariable String sku,
+			@RequestParam Integer quantity,
 			@RequestHeader(value = "Authorization", required = false) String authHeader) {
 		logger.info(ProductServiceConstants.LOG_PUT_ADD_STOCK_REQUEST, sku, quantity);
 
@@ -220,7 +227,7 @@ public class ProductController {
 							ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
 		}
 
-		if (!AuthService.isAdmin(authHeader)) {
+		if (Boolean.FALSE.equals(servletRequest.getAttribute(ISADMIN))) {
 			logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
 					.body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(),
@@ -233,7 +240,8 @@ public class ProductController {
 	}
 
 	@PutMapping("/{sku}/stock/reduce")
-	public ResponseEntity<Object> reduceStock(@PathVariable String sku, @RequestParam Integer quantity,
+	public ResponseEntity<Object> reduceStock(HttpServletRequest servletRequest, @PathVariable String sku,
+			@RequestParam Integer quantity,
 			@RequestHeader(value = "Authorization", required = false) String authHeader) {
 		logger.info(ProductServiceConstants.LOG_PUT_REDUCE_STOCK_REQUEST, sku, quantity);
 
@@ -245,7 +253,7 @@ public class ProductController {
 							ProductServiceConstants.AUTHORIZATION_HEADER_REQUIRED_MESSAGE));
 		}
 
-		if (!AuthService.isAdmin(authHeader)) {
+		if (Boolean.FALSE.equals(servletRequest.getAttribute(ISADMIN))) {
 			logger.warn(ProductServiceConstants.LOG_ACCESS_DENIED_NOT_ADMIN);
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
 					.body(new GlobalErrorResponse(HttpStatus.FORBIDDEN.value(),
@@ -258,7 +266,8 @@ public class ProductController {
 	}
 
 	@PutMapping("/reduce-stock")
-	public ResponseEntity<Object> reduceStockByProductId(@RequestParam Long productId, @RequestParam Integer quantity) {
+	public ResponseEntity<Object> reduceStockByProductId(HttpServletRequest servletRequest,
+			@RequestParam Long productId, @RequestParam Integer quantity) {
 		logger.info("Reducing stock for product ID: {} by quantity: {}", productId, quantity);
 		productService.reduceStockByProductId(productId, quantity);
 		return ResponseEntity.ok().build();
@@ -267,23 +276,25 @@ public class ProductController {
 	@PostMapping("/rate-product")
 	public ResponseEntity<SuccessResponse> rateProduct(@RequestBody RateRequest rateRequest,
 			@RequestHeader(value = "Authorization", required = false) String authHeader) {
-		
+
 		try {
 			logger.info("check product validity");
 			productService.getProductById(rateRequest.getProductId());
 		} catch (Exception e) {
 			throw new ProductNotFoundException(ProductServiceConstants.PRODUCT_NOT_FOUND_MESSAGE);
-		} 
+		}
 
 		try {
 			logger.info("authentication check");
 			if (authHeader != null && AuthService.isUser(authHeader)) {
 				logger.info("authheader present");
-				 String token = authHeader.startsWith(ProductServiceConstants.BEARER_PREFIX) ? 
-						 authHeader.substring(ProductServiceConstants.BEARER_TOKEN_START_INDEX) : authHeader;
-				 
-				logger.info("Current token is {}, and has usernmae : {}", JwtTokenUtil.isTokenValid(token), JwtTokenUtil.extractUsername(token));
-				UUID userId = AuthService.getUserId(authHeader);
+				String token = authHeader.startsWith(ProductServiceConstants.BEARER_PREFIX)
+						? authHeader.substring(ProductServiceConstants.BEARER_TOKEN_START_INDEX)
+						: authHeader;
+
+				String username = JwtTokenUtil.extractUsername(token);
+				logger.info("Current token is {}, and has usernmae : {}", JwtTokenUtil.isTokenValid(authHeader), username);
+				UUID userId = AuthService.getUserId(token);
 				rateRequest.setUserId(userId.toString());
 				SuccessResponse successResponse = productService.rateProduct(rateRequest);
 				return ResponseEntity.ok(successResponse);
@@ -295,7 +306,7 @@ public class ProductController {
 		SuccessResponse successResponse = productService.rateProduct(rateRequest);
 		return ResponseEntity.ok(successResponse);
 	}
-	
+
 	public UUID validateUserID(String id) {
 		UUID userId = null;
 		try {

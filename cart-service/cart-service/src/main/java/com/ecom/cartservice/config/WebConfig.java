@@ -9,9 +9,9 @@ import com.ecom.cartservice.interceptor.AuthInterceptor;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-	
+
 	private final AuthInterceptor authInterceptor;
-	
+
 	public WebConfig(AuthInterceptor authInterceptor) {
 		this.authInterceptor = authInterceptor;
 	}
@@ -19,12 +19,6 @@ public class WebConfig implements WebMvcConfigurer {
 	@Override
 	public void addInterceptors(@NonNull InterceptorRegistry registry) {
 		WebMvcConfigurer.super.addInterceptors(registry);
-		
-		registry.addInterceptor(authInterceptor)
-		.addPathPatterns("/cart/**")
-		.excludePathPatterns("");
-		
+		registry.addInterceptor(authInterceptor).addPathPatterns("/cart/**").excludePathPatterns("");
 	}
-
-	
 }

@@ -18,9 +18,9 @@ import com.ecom.orderservice.constants.OrderServiceConstants;
 import com.ecom.orderservice.dto.GlobalErrorResponse;
 import com.ecom.orderservice.dto.OrderRequest;
 import com.ecom.orderservice.dto.OrderResponse;
-import com.ecom.orderservice.service.AuthenticationService;
 import com.ecom.orderservice.service.OrderService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -29,37 +29,36 @@ public class OrderController {
 
     private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
     private final OrderService orderService;
-    private final AuthenticationService authenticationService;
+    private static final String ISUSER = "isUser";
+    private static final String USERID = "userId";
 
-    public OrderController(OrderService orderService, AuthenticationService authenticationService) {
+    public OrderController(OrderService orderService) {
         this.orderService = orderService;
-        this.authenticationService = authenticationService;
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<Object> checkout(@Valid @RequestBody OrderRequest request, 
+    public ResponseEntity<Object> checkout(HttpServletRequest servletRequest, @Valid @RequestBody OrderRequest request, 
                                      @RequestHeader("Authorization") String authorization) {
         logger.info(OrderServiceConstants.LOG_POST_CHECKOUT_REQUEST, request.getUserId());
         
         try {
             // Validate JWT token - only USER role can checkout
-            logger.info("isuser: {}", authenticationService.isUser(authorization));
-            if (!authenticationService.isUser(authorization)) {
+            logger.info("isuser: {}", servletRequest.getAttribute(ISUSER));
+            if (Boolean.FALSE.equals(servletRequest.getAttribute(ISUSER))) {
                 logger.warn(OrderServiceConstants.LOG_UNAUTHORIZED_CHECKOUT_ATTEMPT, request.getUserId());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new GlobalErrorResponse(401, OrderServiceConstants.USER_ROLE_REQUIRED_MESSAGE, OrderServiceConstants.USER_ROLE_REQUIRED_MESSAGE));
             }
 
             // Ensure the token belongs to the same userId provided in the request
-            var tokenDetails = authenticationService.validateTokenAndGetDetails(authorization);
-            String tokenUserId = tokenDetails.getUserId();
+            String tokenUserId = servletRequest.getAttribute(USERID).toString();
             if (tokenUserId == null || !tokenUserId.equals(request.getUserId())) {
                 logger.warn("User {} attempted to checkout for user {}", tokenUserId, request.getUserId());
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new GlobalErrorResponse(403, OrderServiceConstants.UNAUTHORIZED_ACCESS_MESSAGE, "Users can only checkout for themselves"));
             }
 
-            OrderResponse order = orderService.checkout(request);
+            OrderResponse order = orderService.checkout(request, authorization);
             
             // Check if order is INCOMPLETE (payment service unavailable)
             if ("INCOMPLETE".equalsIgnoreCase(order.getOrderStatus().toString())) {
@@ -80,19 +79,19 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<Object> getOrderById(@PathVariable Long orderId,
+    public ResponseEntity<Object> getOrderById(HttpServletRequest servletRequest, @PathVariable Long orderId,
                                          @RequestHeader("Authorization") String authorization) {
         logger.info(OrderServiceConstants.LOG_GET_ORDER_BY_ID_REQUEST, orderId);
         
         try {
             // Validate JWT token - USER or ADMIN can access
-            if (!authenticationService.isValidToken(authorization)) {
+            if (Boolean.FALSE.equals(servletRequest.getAttribute("isValidToken"))) {
                 logger.warn(OrderServiceConstants.LOG_UNAUTHORIZED_ACCESS_ATTEMPT_ORDER, orderId);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new GlobalErrorResponse(401, OrderServiceConstants.INVALID_TOKEN_MESSAGE, OrderServiceConstants.INVALID_TOKEN_MESSAGE));
             }
             
-            OrderResponse order = orderService.getOrderById(orderId);
+            OrderResponse order = orderService.getOrderById(orderId, authorization);
             return ResponseEntity.ok(order);
             
         } catch (Exception e) {
@@ -103,19 +102,19 @@ public class OrderController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<Object> getOrdersByUserId(@PathVariable String userId,
+    public ResponseEntity<Object> getOrdersByUserId(HttpServletRequest servletRequest, @PathVariable String userId,
                                            @RequestHeader("Authorization") String authorization) {
         logger.info(OrderServiceConstants.LOG_GET_ORDERS_BY_USER_REQUEST, userId);
         
         try {
             // Validate JWT token - USER or ADMIN can access
-            if (!authenticationService.isValidToken(authorization)) {
+            if (Boolean.FALSE.equals(servletRequest.getAttribute("isValidToken"))) {
                 logger.warn(OrderServiceConstants.LOG_UNAUTHORIZED_ACCESS_ATTEMPT_USER_ORDERS, userId);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new GlobalErrorResponse(401, OrderServiceConstants.INVALID_TOKEN_MESSAGE, OrderServiceConstants.INVALID_TOKEN_MESSAGE));
             }
             
-            List<OrderResponse> orders = orderService.getOrdersByUserId(userId);
+            List<OrderResponse> orders = orderService.getOrdersByUserId(userId, authorization);
             return ResponseEntity.ok(orders);
             
         } catch (Exception e) {

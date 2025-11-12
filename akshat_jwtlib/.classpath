@@ -6,6 +6,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="resources"/>
 	<classpathentry kind="lib" path="D:/Eclipse/Workspace/Assessment/akshat_jwtlib/resources/lib/jackson-annotations-2.17.2.jar"/>
 	<classpathentry kind="lib" path="D:/Eclipse/Workspace/Assessment/akshat_jwtlib/resources/lib/jackson-core-2.17.2.jar"/>
 	<classpathentry kind="lib" path="D:/Eclipse/Workspace/Assessment/akshat_jwtlib/resources/lib/jackson-databind-2.17.2.jar"/>

@@ -53,6 +53,10 @@ public class PaymentServiceConstants {
     public static final String LOG_VALIDATION_ERROR = "Validation error: {}";
     public static final String LOG_UNEXPECTED_ERROR = "Unexpected error occurred: {}";
     
+    
+    public static final String BEARER_PREFIX = "Bearer ";
+    public static final int BEARER_TOKEN_START_INDEX = 7;
+    
     // Private constructor to prevent instantiation
     private PaymentServiceConstants() {}
 }

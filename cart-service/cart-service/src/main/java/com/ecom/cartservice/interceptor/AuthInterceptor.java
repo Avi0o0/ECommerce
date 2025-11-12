@@ -46,9 +46,11 @@ public class AuthInterceptor implements HandlerInterceptor {
 			if (isValidToken) {
 				boolean isUser = AuthService.isUser(token);
 				boolean isAdmin = AuthService.isAdmin(token);
+				String userId = AuthService.getUserId(token).toString();
 				request.setAttribute("isValidToken", isValidToken);
 				request.setAttribute("isUser", isUser);
 				request.setAttribute("isAdmin", isAdmin);
+				request.setAttribute("userId", userId);
 				return true;
 			} else {
 				sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid Token");
@@ -57,7 +59,8 @@ public class AuthInterceptor implements HandlerInterceptor {
 			sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Token has expired. Please log in again.");
 			return false;
 		} catch (JwtException e) {
-			sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid token. Please provide a valid token.");
+			sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+					"Invalid token. Please provide a valid token.");
 			return false;
 		} catch (Exception e) {
 			sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
@@ -70,13 +73,21 @@ public class AuthInterceptor implements HandlerInterceptor {
 	@Override
 	public void postHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
 			@NonNull Object handler, @Nullable ModelAndView modelAndView) throws Exception {
-		logger.info("PostHandle: Completed");
+		if (modelAndView != null) {
+			modelAndView.addObject("footerMessage", "© 2025 Akshat's Ecom App");
+		}
+		logger.info("postHandle: Controller executed successfully for URI: {}", request.getRequestURI());
+
 	}
 
 	@Override
 	public void afterCompletion(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
 			@NonNull Object handler, @Nullable Exception ex) throws Exception {
-		logger.info("AfterCompletion: Excution Completed");
+		if (ex != null) {
+	        logger.error("afterCompletion: Exception occurred in request: {}", request.getRequestURI(), ex);
+	    } else {
+	        logger.info("afterCompletion: Request completed successfully for {}", request.getRequestURI());
+	    }
 	}
 
 	private void sendErrorResponse(HttpServletResponse response, int status, String message) throws IOException {

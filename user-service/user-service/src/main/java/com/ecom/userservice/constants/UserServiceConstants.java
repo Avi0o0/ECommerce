@@ -89,6 +89,8 @@ public final class UserServiceConstants {
     public static final String ROLE_PREFIX = "ROLE_";
     public static final String EMPTY_STRING = "";
     public static final String UNKNOWN_METHODS = "Unknown";
+    public static final int BEARER_TOKEN_START_INDEX = 7;
+    public static final String BEARER_PREFIX = "Bearer ";
     
     // ==================== NUMERIC VALUES ====================
     
