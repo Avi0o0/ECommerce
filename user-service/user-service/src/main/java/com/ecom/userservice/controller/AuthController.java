@@ -12,12 +12,16 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecom.userservice.client.ProductServiceClient;
+import com.ecom.userservice.constants.UserServiceConstants;
+import com.ecom.userservice.dto.BlackListRequest;
 import com.ecom.userservice.dto.LoginRequest;
 import com.ecom.userservice.dto.ProductResponse;
 import com.ecom.userservice.dto.RegisterRequest;
@@ -26,11 +30,15 @@ import com.ecom.userservice.dto.TokenResponse;
 import com.ecom.userservice.dto.TokenValidationResponse;
 import com.ecom.userservice.entity.Role;
 import com.ecom.userservice.entity.UserAccount;
+import com.ecom.userservice.exception.AuthenticationException;
 import com.ecom.userservice.exception.InvalidCredentialsException;
 import com.ecom.userservice.exception.UsernameAlreadyExistsException;
 import com.ecom.userservice.repository.RoleRepository;
 import com.ecom.userservice.repository.UserAccountRepository;
 import com.ecom.userservice.security.JwtService;
+import com.ecom.userservice.service.UserService;
+
+import jwt.util.JwtTokenUtil;
 
 @RestController
 @RequestMapping("/auth")
@@ -44,16 +52,18 @@ public class AuthController {
     private final UserAccountRepository userRepo;
     private final RoleRepository roleRepo;
     private final ProductServiceClient productServiceClient;
+    private final UserService userService;
 
     public AuthController(AuthenticationManager authenticationManager, JwtService jwtService,
             PasswordEncoder passwordEncoder, UserAccountRepository userRepo, RoleRepository roleRepo,
-            ProductServiceClient productServiceClient) {
+            ProductServiceClient productServiceClient, UserService userService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
         this.productServiceClient = productServiceClient;
+		this.userService = userService;
     }
 
     @PostMapping("/login")
@@ -163,5 +173,23 @@ public class AuthController {
             logger.error("User registration failed for username: {}. Error: {}", request.username(), e.getMessage(), e);
             throw new RuntimeException("Registration failed: " + e.getMessage());
         }
+    }
+    
+    @PostMapping("/logout")
+    public SuccessResponse logout(@RequestHeader("Authorization") String authHeader) {
+    	try {
+			String token = "";
+			if (StringUtils.hasText(authHeader)) {
+				token = authHeader.startsWith(UserServiceConstants.BEARER_PREFIX)
+						? authHeader.substring(UserServiceConstants.BEARER_TOKEN_START_INDEX)
+						: authHeader;
+			}
+    		JwtTokenUtil.isTokenValid(token);
+    		BlackListRequest blackListRequest = new BlackListRequest(token);
+    		userService.addTokenToBlackList(blackListRequest);
+    		return new SuccessResponse(HttpStatus.OK.value(), "Logout Successfull !!");
+    	} catch (Exception e) {
+			throw new AuthenticationException("logout failed");
+		}
     }
 }

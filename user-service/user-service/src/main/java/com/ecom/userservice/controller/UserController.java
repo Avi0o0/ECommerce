@@ -5,9 +5,11 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecom.userservice.constants.UserServiceConstants;
+import com.ecom.userservice.dto.BlackListRequest;
 import com.ecom.userservice.dto.GlobalErrorResponse;
 import com.ecom.userservice.dto.OrderResponse;
 import com.ecom.userservice.dto.OrderSummaryResponse;
@@ -74,7 +77,7 @@ public class UserController {
 		logger.info(UserServiceConstants.LOG_REQUEST_TO_GET_USER_BY_ID, id);
 
 		UUID userId = validateUserID(id);
-	
+
 		UserAccount user = userService.getUserById(userId);
 		logger.info(UserServiceConstants.LOG_SUCCESSFULLY_RETRIEVED_USER, user.getUsername(), id);
 
@@ -97,7 +100,7 @@ public class UserController {
 		logger.info(UserServiceConstants.LOG_REQUEST_TO_DELETE_USER, id);
 
 		UUID userId = validateUserID(id);
-		
+
 		userService.deleteUser(userId);
 		logger.info(UserServiceConstants.LOG_USER_DELETED_SUCCESSFULLY, id, id);
 		SuccessResponse response = new SuccessResponse(200, UserServiceConstants.USER_DELETED_SUCCESS_MESSAGE);
@@ -110,7 +113,7 @@ public class UserController {
 		logger.info(UserServiceConstants.LOG_REQUEST_TO_UPDATE_PASSWORD, id);
 
 		UUID userId = validateUserID(id);
-		
+
 		userService.updatePassword(userId, request);
 		logger.info(UserServiceConstants.LOG_PASSWORD_UPDATED_SUCCESSFULLY, id, id);
 		SuccessResponse response = new SuccessResponse(200, UserServiceConstants.PASSWORD_UPDATED_SUCCESS_MESSAGE);
@@ -139,6 +142,20 @@ public class UserController {
 	@GetMapping("/{id}/orders")
 	public ResponseEntity<Object> getUserOrders(@PathVariable String id,
 			@RequestHeader("Authorization") String authorization) {
+
+		String token = "";
+		if (StringUtils.hasText(authorization)) {
+			token = authorization.startsWith(UserServiceConstants.BEARER_PREFIX)
+					? authorization.substring(UserServiceConstants.BEARER_TOKEN_START_INDEX)
+					: authorization;
+		}
+
+		BlackListRequest blackListRequest = new BlackListRequest(token);
+		if (userService.getBlacklistTokenIfExist(blackListRequest)) {
+			return ResponseEntity.status(401).body(
+					new GlobalErrorResponse(HttpStatus.UNAUTHORIZED.value(), "Invalid Token", "Please Login Again !!"));
+		}
+
 		// Ensure the requester is authenticated and has ROLE_USER
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		if (auth == null || auth.getAuthorities().stream().noneMatch(a -> "ROLE_USER".equals(a.getAuthority()))) {
@@ -189,7 +206,7 @@ public class UserController {
 					.body(new GlobalErrorResponse(500, "Failed to retrieve order", e.getMessage()));
 		}
 	}
-	
+
 	public UUID validateUserID(String id) {
 		UUID userId = null;
 		try {

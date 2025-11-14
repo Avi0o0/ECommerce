@@ -32,13 +32,6 @@ public class AuthInterceptor implements HandlerInterceptor {
 			@NonNull Object handler) throws Exception {
 
 		logger.info("PreHandle: Auth Check at {}", request.getRequestURI());
-		
-		if((request.getRequestURI().equals("/products") && request.getMethod().equalsIgnoreCase("GET"))
-			|| (request.getRequestURI().equals("/products/rate-product") && request.getMethod().equalsIgnoreCase("POST"))) {
-			return true;
-		}
-		
-
 
 		try {
 			String authHeader = request.getHeader("Authorization");
