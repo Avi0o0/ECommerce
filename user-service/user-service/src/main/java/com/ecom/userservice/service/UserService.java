@@ -7,10 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import com.ecom.userservice.client.OrderServiceClient;
-import com.ecom.userservice.constants.UserServiceConstants;
 import com.ecom.userservice.dto.BlackListRequest;
 import com.ecom.userservice.dto.OrderResponse;
 import com.ecom.userservice.dto.OrderSummaryResponse;
@@ -101,14 +99,15 @@ public class UserService {
 	}
 
 	public void addTokenToBlackList(BlackListRequest blackListRequest) {
+		logger.info("adding blacklist token {}", blackListRequest.getToken());
 		BlackListToken blackListToken = new BlackListToken();
-		blackListRequest.setToken(blackListRequest.getToken());
+		blackListToken.setToken(blackListRequest.getToken());
 		blackListTokenRepo.save(blackListToken);
+		logger.info("added to blacklist: {}", blackListToken.getToken());
 	}
 
 	public boolean getBlacklistTokenIfExist(BlackListRequest blackListRequest) {
 		try {
-			System.out.println(blackListRequest.getToken());
 			BlackListToken blackListToken = blackListTokenRepo.findByToken(blackListRequest.getToken())
 					.orElseThrow(() -> new IllegalArgumentException("Token not found: " + blackListRequest.getToken()));
 			if (blackListToken != null) {

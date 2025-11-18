@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -43,7 +44,13 @@ public class AuthInterceptor implements HandlerInterceptor {
 			}
 			boolean isValidToken = JwtTokenUtil.isTokenValid(token);
 			logger.info("is Token Valid {}", isValidToken);
+			
 			if (isValidToken) {
+				if (JwtTokenUtil.isBlacklistedToken(token)){
+					sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Please Login Again !!");
+					logger.info("JWT is blacklisted");
+					return false;
+				}
 				boolean isUser = AuthService.isUser(token);
 				boolean isAdmin = AuthService.isAdmin(token);
 				String userId = AuthService.getUserId(token).toString();

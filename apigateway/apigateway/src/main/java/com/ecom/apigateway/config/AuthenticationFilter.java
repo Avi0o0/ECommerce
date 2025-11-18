@@ -12,6 +12,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.ecom.apigateway.dto.GlobalErrorResponse;
+import com.ecom.apigateway.entity.BlackListToken;
+import com.ecom.apigateway.exception.UserNotFoundException;
+import com.ecom.apigateway.repo.BlackListTokenRepo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jwt.util.JwtTokenUtil;
@@ -24,9 +27,12 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 	}
 
 	private static final Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
+	
+	private final BlackListTokenRepo blackListTokenRepo;
 
-	public AuthenticationFilter() {
+	public AuthenticationFilter(BlackListTokenRepo blackListTokenRepo) {
 		super(Config.class);
+		this.blackListTokenRepo = blackListTokenRepo;
 	}
 
 	@Override
@@ -52,6 +58,10 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 			}
 
 			String token = authHeader.substring(7);
+			
+			if (checkIfBlacklistToken(token)) {
+				return handleUnauthorized(exchange, "Invalid Token!! Please Login Again");
+			}
 
 			// Validate token with User Service
 			try {
@@ -88,6 +98,19 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 			String fallbackBody = "{\"status\":401,\"message\":\"" + message + "\",\"desc\":\"" + message + "\"}";
 			return response.writeWith(Mono.just(response.bufferFactory().wrap(fallbackBody.getBytes())));
 		}
+	}
+	
+	public boolean checkIfBlacklistToken(String token) {
+		try {
+			BlackListToken blackListToken = blackListTokenRepo.findByToken(token)
+					.orElseThrow(() -> new IllegalArgumentException("Token not found: " + token));
+			if (blackListToken != null) {
+				return true;
+			}
+		} catch (Exception e) {
+			throw new UserNotFoundException("Request Failed: " + e.getMessage());
+		}
+		return false;
 	}
 
 }

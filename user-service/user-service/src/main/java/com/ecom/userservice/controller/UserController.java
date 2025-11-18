@@ -5,11 +5,9 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecom.userservice.constants.UserServiceConstants;
-import com.ecom.userservice.dto.BlackListRequest;
 import com.ecom.userservice.dto.GlobalErrorResponse;
 import com.ecom.userservice.dto.OrderResponse;
 import com.ecom.userservice.dto.OrderSummaryResponse;
@@ -142,19 +139,6 @@ public class UserController {
 	@GetMapping("/{id}/orders")
 	public ResponseEntity<Object> getUserOrders(@PathVariable String id,
 			@RequestHeader("Authorization") String authorization) {
-
-		String token = "";
-		if (StringUtils.hasText(authorization)) {
-			token = authorization.startsWith(UserServiceConstants.BEARER_PREFIX)
-					? authorization.substring(UserServiceConstants.BEARER_TOKEN_START_INDEX)
-					: authorization;
-		}
-
-		BlackListRequest blackListRequest = new BlackListRequest(token);
-		if (userService.getBlacklistTokenIfExist(blackListRequest)) {
-			return ResponseEntity.status(401).body(
-					new GlobalErrorResponse(HttpStatus.UNAUTHORIZED.value(), "Invalid Token", "Please Login Again !!"));
-		}
 
 		// Ensure the requester is authenticated and has ROLE_USER
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();

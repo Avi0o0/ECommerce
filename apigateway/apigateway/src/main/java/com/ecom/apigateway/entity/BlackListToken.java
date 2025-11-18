@@ -1,8 +1,4 @@
-package com.ecom.userservice.entity;
-
-import java.time.LocalDateTime;
-
-import org.hibernate.annotations.CreationTimestamp;
+package com.ecom.apigateway.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,10 +18,6 @@ public class BlackListToken {
 	@Column(name = "token", nullable = false, unique = true)
 	private String token;
 
-	@CreationTimestamp
-	@Column(name = "created_at", nullable = false, updatable = false)
-	private LocalDateTime createdAt;
-
 	public Long getId() {
 		return id;
 	}
@@ -40,14 +32,6 @@ public class BlackListToken {
 
 	public void setToken(String token) {
 		this.token = token;
-	}
-
-	public LocalDateTime getCreatedAt() {
-		return createdAt;
-	}
-
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
 	}
 
 }

@@ -178,12 +178,14 @@ public class AuthController {
     @PostMapping("/logout")
     public SuccessResponse logout(@RequestHeader("Authorization") String authHeader) {
     	try {
+    		logger.info("Logout process started");
 			String token = "";
 			if (StringUtils.hasText(authHeader)) {
 				token = authHeader.startsWith(UserServiceConstants.BEARER_PREFIX)
 						? authHeader.substring(UserServiceConstants.BEARER_TOKEN_START_INDEX)
 						: authHeader;
 			}
+			logger.info("Token: {}", token);
     		JwtTokenUtil.isTokenValid(token);
     		BlackListRequest blackListRequest = new BlackListRequest(token);
     		userService.addTokenToBlackList(blackListRequest);

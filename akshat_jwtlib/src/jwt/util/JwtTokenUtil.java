@@ -12,6 +12,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jwt.util.service.DatabaseService;
 import jwt.util.service.PropertiesHandler;
 
 public class JwtTokenUtil {
@@ -74,5 +75,11 @@ public class JwtTokenUtil {
 		}
 
 		return List.of();
+	}
+	
+	public static boolean isBlacklistedToken(String token) {
+		logger.info("is token blacklisted check");
+		DatabaseService databaseService = new DatabaseService();
+		return databaseService.isTokenBlacklisted(token);
 	}
 }
