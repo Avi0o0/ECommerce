@@ -51,6 +51,11 @@ public class AuthInterceptor implements HandlerInterceptor {
 			boolean isValidToken = JwtTokenUtil.isTokenValid(token);
 			logger.info("is Token Valid {}", isValidToken);
 			if (isValidToken) {
+				if (JwtTokenUtil.isBlacklistedToken(token)){
+					sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Please Login Again !!");
+					logger.info("JWT is blacklisted");
+					return false;
+				}
 				boolean isUser = AuthService.isUser(token);
 				boolean isAdmin = AuthService.isAdmin(token);
 				String userId = AuthService.getUserId(token).toString();
